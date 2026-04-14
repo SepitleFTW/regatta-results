@@ -93,7 +93,7 @@ export default function ResultsBrowser() {
         ))}
       </div>
 
-      {fetched === null && !fetchError && (
+      {fetched === null && (
         <div style={{ padding: "80px 0", textAlign: "center", color: "#4a6b4a", fontFamily: "'DM Sans', sans-serif" }}>
           Loading {year} regattas…
         </div>
