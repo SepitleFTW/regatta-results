@@ -1,3 +1,5 @@
+import autoDiscovered from './auto-discovered.json';
+
 export const YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014];
 
 export const PROVINCES = ["All", "Gauteng", "Western Cape", "Eastern Cape", "KwaZulu-Natal"];
@@ -328,3 +330,20 @@ export const REGATTAS = {
     { id: "wemmer-senior-2014", name: "Wemmer Senior", date: "2014", location: "Wemmer Pan", province: "Gauteng", status: "Official", url: `${BASE}/Results2014/webwemmer12/results.htm` },
   ],
 };
+
+// Merge auto-discovered regattas (from daily GitHub Action sync)
+// These are appended to the relevant year without duplicating known URLs.
+const _knownUrls = new Set(
+  Object.values(REGATTAS).flat().map(r => r.url.replace(/^https?:\/\/(www\.)?/, '').toLowerCase())
+);
+for (const [year, races] of Object.entries(autoDiscovered)) {
+  const y = parseInt(year);
+  if (!REGATTAS[y]) REGATTAS[y] = [];
+  for (const race of races) {
+    const norm = race.url.replace(/^https?:\/\/(www\.)?/, '').toLowerCase();
+    if (!_knownUrls.has(norm)) {
+      REGATTAS[y].push(race);
+      _knownUrls.add(norm);
+    }
+  }
+}
