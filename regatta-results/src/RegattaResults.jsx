@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // ─── Real Data from regattaresults.co.za ──────────────────────────────────
 const YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014];
@@ -15,7 +15,7 @@ const REGATTAS = {
     { id: "jeppe-feb", name: "Jeppe U14, U15 & Masters", date: "14 Feb 2026", location: "Germiston Lake", province: "Gauteng", status: "Official", url: "http://regattaresults.co.za/Results/Results2026/2026-Feb-Jep1415M/results.htm" },
     { id: "albans-feb", name: "St Albans U16, U19 & Seniors", date: "21 Feb 2026", location: "Roodeplaat Dam", province: "Gauteng", status: "Official", url: "http://regattaresults.co.za/Results/Results2026/2026-Feb-Albans1619S/results.htm" },
     { id: "assumption-feb", name: "Assumption U14, U15 & Masters", date: "28 Feb 2026", location: "Roodeplaat Dam", province: "Gauteng", status: "Official", url: "http://regattaresults.co.za/Results/Results2026/2026-Feb-AC1415M/results.htm" },
-    { id: "sa-schools", name: "SA Schools Champs", date: "6–8 Mar 2026", location: "Roodeplaat Dam", province: "Gauteng", status: "Upcoming", url: "https://regattaresults.co.za/Results/Results2026/2026-Feb-SASChamps/results.htm" },
+    { id: "sa-schools", name: "SA Schools Champs", date: "6–8 Mar 2026", location: "Roodeplaat Dam", province: "Gauteng", status: "Official", url: "https://regattaresults.co.za/Results/Results2026/2026-Feb-SASChamps/results.htm" },
   ],
   2025: [
     { id: "kes-2025", name: "KES GSRF U16 & U19 Regatta", date: "18 Jan 2025", location: "Roodeplaat Dam", province: "Gauteng", status: "Official", url: "https://regattaresults.co.za/Results/Results2025/2025-Jan-KES1619/results.htm" },
@@ -118,6 +118,324 @@ const StatusBadge = ({ status }) => {
     }}>{status}</span>
   );
 };
+
+// ─── Proxy helpers ─────────────────────────────────────────────────────────
+function toProxyUrl(url) {
+  return url.replace(/^https?:\/\/(www\.)?regattaresults\.co\.za/, '/rr-proxy');
+}
+
+function parseEventList(html, proxyUrl) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const baseDir = proxyUrl.substring(0, proxyUrl.lastIndexOf('/') + 1);
+  const rows = [...doc.querySelectorAll('table tr')];
+  return rows
+    .filter(r => r.querySelectorAll('td').length >= 7)
+    .map(row => {
+      const cells = [...row.querySelectorAll('td')];
+      const link = cells[7]?.querySelector('a');
+      const href = link?.getAttribute('href');
+      return {
+        eventId: cells[0]?.textContent.trim(),
+        eventName: cells[1]?.textContent.trim(),
+        race: cells[2]?.textContent.trim(),
+        time: cells[4]?.textContent.trim(),
+        status: cells[5]?.textContent.trim(),
+        detailsUrl: href ? baseDir + href : null,
+      };
+    })
+    .filter(r => r.eventName && r.detailsUrl);
+}
+
+function parseEventResults(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const rows = [...doc.querySelectorAll('table tr')]
+    .filter(r => r.querySelectorAll('td').length >= 5)
+    .map(row => {
+      const cells = [...row.querySelectorAll('td')];
+      return {
+        place: cells[0]?.textContent.trim(),
+        lane: cells[1]?.textContent.trim(),
+        org: cells[3]?.textContent.trim(),
+        time: cells[4]?.textContent.trim(),
+        delta: cells[6]?.textContent.trim() || '',
+        status: cells[7]?.textContent.trim() || 'Finished',
+        athlete: cells[8]?.textContent.trim() || '',
+      };
+    })
+    .filter(r => r.place && r.org);
+  return rows;
+}
+
+// ─── Race Results Page ─────────────────────────────────────────────────────
+const PLACE_MEDAL = { '1': '#d4a017', '2': '#9ca3af', '3': '#a0522d' };
+
+function RaceResultsPage({ race, onBack }) {
+  const [events, setEvents] = useState([]);
+  const [eventSearch, setEventSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [results, setResults] = useState(null);
+  const [resultsLoading, setResultsLoading] = useState(false);
+  const [resultsError, setResultsError] = useState(null);
+
+  const proxyUrl = toProxyUrl(race.url);
+  const filteredEvents = eventSearch.trim()
+    ? events.filter(ev =>
+        ev.eventName.toLowerCase().includes(eventSearch.toLowerCase()) ||
+        ev.race.toLowerCase().includes(eventSearch.toLowerCase())
+      )
+    : events;
+
+  // Scroll to top on mount
+  useEffect(() => { window.scrollTo(0, 0); }, []);
+
+  // Load event list
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetch(proxyUrl)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
+      .then(html => { if (!cancelled) setEvents(parseEventList(html, proxyUrl)); })
+      .catch(e => { if (!cancelled) setError(e.message); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [proxyUrl]);
+
+  function openEvent(ev) {
+    setSelectedEvent(ev);
+    setResults(null);
+    setResultsError(null);
+    setResultsLoading(true);
+    window.scrollTo(0, 0);
+    fetch(ev.detailsUrl)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
+      .then(html => setResults(parseEventResults(html)))
+      .catch(e => setResultsError(e.message))
+      .finally(() => setResultsLoading(false));
+  }
+
+  const raceLabel = selectedEvent
+    ? selectedEvent.race.includes(' - ')
+      ? selectedEvent.race.split(' - ').slice(1).join(' ')
+      : selectedEvent.race
+    : null;
+
+  return (
+    <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
+      {/* Back button */}
+      <button
+        onClick={() => selectedEvent ? setSelectedEvent(null) : onBack()}
+        style={{
+          background: 'none', border: 'none', color: '#d4a017', cursor: 'pointer',
+          fontFamily: "'DM Mono', monospace", fontSize: 12, letterSpacing: '0.12em',
+          textTransform: 'uppercase', padding: 0, marginBottom: 24,
+          display: 'flex', alignItems: 'center', gap: 6,
+        }}
+      >
+        ← {selectedEvent ? 'All events' : 'All regattas'}
+      </button>
+
+      {/* Page header */}
+      <div style={{ marginBottom: 32 }}>
+        <h2 style={{
+          fontFamily: "'Playfair Display', serif", color: '#f5f0e0',
+          fontSize: 'clamp(1.4rem, 4vw, 2.2rem)', margin: '0 0 10px',
+        }}>
+          {selectedEvent ? `${selectedEvent.eventName}` : race.name}
+        </h2>
+        {selectedEvent && (
+          <p style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 13, margin: '0 0 10px' }}>
+            {raceLabel}
+          </p>
+        )}
+        <div style={{
+          display: 'flex', gap: 20, flexWrap: 'wrap',
+          color: '#6b7c6b', fontFamily: "'DM Sans', sans-serif", fontSize: 13,
+          alignItems: 'center',
+        }}>
+          <span>📅 {race.date}</span>
+          <span>📍 {race.location}</span>
+          <StatusBadge status={race.status} />
+        </div>
+      </div>
+
+      {/* ── Event list ── */}
+      {!selectedEvent && (
+        loading ? (
+          <div style={{ padding: '80px 0', textAlign: 'center', color: '#4a6b4a', fontFamily: "'DM Sans', sans-serif" }}>
+            Loading events…
+          </div>
+        ) : error ? (
+          <div style={{
+            background: '#2d1b1b', border: '1px solid #7f1d1d', borderRadius: 12,
+            padding: 24, color: '#f87171', fontFamily: "'DM Sans', sans-serif",
+          }}>
+            <div style={{ marginBottom: 12 }}>Could not load results: {error}</div>
+            <a href={race.url} target="_blank" rel="noopener noreferrer"
+              style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>
+              Open on regattaresults.co.za →
+            </a>
+          </div>
+        ) : (
+          <div>
+            <input
+              value={eventSearch}
+              onChange={e => setEventSearch(e.target.value)}
+              placeholder="Search events…"
+              style={{
+                background: '#0f220f', border: '1px solid #1a3a1a', borderRadius: 8,
+                padding: '10px 16px', color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif",
+                fontSize: 14, width: '100%', outline: 'none', marginBottom: 16,
+                boxSizing: 'border-box',
+              }}
+            />
+            <p style={{
+              color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 11,
+              letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 16,
+            }}>
+              {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {filteredEvents.map((ev, i) => (
+                <button key={i} onClick={() => openEvent(ev)} style={{
+                  background: 'linear-gradient(145deg, #0f220f, #0a1a0a)',
+                  border: '1px solid #1a3a1a', borderRadius: 10,
+                  padding: '14px 18px', cursor: 'pointer', textAlign: 'left',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  gap: 16, width: '100%', transition: 'all 0.15s',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#d4a017'; e.currentTarget.style.background = 'linear-gradient(145deg, #122612, #0d1d0d)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#1a3a1a'; e.currentTarget.style.background = 'linear-gradient(145deg, #0f220f, #0a1a0a)'; }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
+                    <span style={{ color: '#2d5a1b', fontFamily: "'DM Mono', monospace", fontSize: 11, flexShrink: 0 }}>
+                      #{ev.eventId}
+                    </span>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{
+                        color: '#f5f0e0', fontFamily: "'Playfair Display', serif",
+                        fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>
+                        {ev.eventName}
+                      </div>
+                      <div style={{ color: '#6b7c6b', fontFamily: "'DM Sans', sans-serif", fontSize: 12, marginTop: 2 }}>
+                        {ev.race}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                    <span style={{ color: '#6b7c6b', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>{ev.time}</span>
+                    <StatusBadge status={ev.status === 'Official' ? 'Official' : 'Scheduled'} />
+                    <span style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 13 }}>→</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )
+      )}
+
+      {/* ── Individual event results ── */}
+      {selectedEvent && (
+        resultsLoading ? (
+          <div style={{ padding: '80px 0', textAlign: 'center', color: '#4a6b4a', fontFamily: "'DM Sans', sans-serif" }}>
+            Loading results…
+          </div>
+        ) : resultsError ? (
+          <div style={{
+            background: '#2d1b1b', border: '1px solid #7f1d1d', borderRadius: 12,
+            padding: 24, color: '#f87171', fontFamily: "'DM Sans', sans-serif",
+          }}>
+            Could not load results: {resultsError}
+          </div>
+        ) : results ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {results.map((row, i) => {
+              const medalColor = PLACE_MEDAL[row.place];
+              const isFinished = !row.status.toLowerCase().includes('scratch') &&
+                !row.status.toLowerCase().includes('dns') &&
+                !row.status.toLowerCase().includes('dnf');
+              const isFirst = row.place === '1';
+
+              return (
+                <div key={i} style={{
+                  background: isFirst
+                    ? 'linear-gradient(145deg, #1c1600, #0f220f)'
+                    : 'linear-gradient(145deg, #0f220f, #0a1a0a)',
+                  border: `1px solid ${isFirst ? '#3d2e00' : '#1a3a1a'}`,
+                  borderRadius: 10, padding: '14px 18px',
+                  display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+                }}>
+                  {/* Place badge */}
+                  <div style={{
+                    width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                    background: isFinished && medalColor ? `${medalColor}18` : 'transparent',
+                    border: `2px solid ${isFinished ? (medalColor || '#1a3a1a') : '#2d1b1b'}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: isFinished ? (medalColor || '#4a6b4a') : '#4a6b4a',
+                    fontFamily: "'DM Mono', monospace", fontWeight: 700, fontSize: 13,
+                  }}>
+                    {isFinished ? row.place : '–'}
+                  </div>
+
+                  {/* Athlete + org */}
+                  <div style={{ flex: 1, minWidth: 120 }}>
+                    <div style={{
+                      color: '#f5f0e0', fontFamily: "'DM Sans', sans-serif",
+                      fontSize: 14, fontWeight: 600, marginBottom: 2,
+                    }}>
+                      {row.athlete || '—'}
+                    </div>
+                    <div style={{
+                      color: '#4a6b4a', fontFamily: "'DM Mono', monospace",
+                      fontSize: 11, letterSpacing: '0.04em',
+                    }}>
+                      {row.org}
+                    </div>
+                  </div>
+
+                  {/* Time + delta */}
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    {isFinished ? (
+                      <>
+                        <div style={{
+                          color: isFirst ? '#d4a017' : '#e8e0c8',
+                          fontFamily: "'DM Mono', monospace",
+                          fontSize: 15, fontWeight: isFirst ? 700 : 400,
+                        }}>
+                          {row.time}
+                        </div>
+                        {row.delta && row.delta !== '.00' && (
+                          <div style={{ color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>
+                            {row.delta}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <span style={{ color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>
+                        {row.status}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Lane */}
+                  <div style={{
+                    color: '#2d5a1b', fontFamily: "'DM Mono', monospace",
+                    fontSize: 11, textAlign: 'center', flexShrink: 0,
+                  }}>
+                    L{row.lane}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : null
+      )}
+    </div>
+  );
+}
 
 // ─── Hero ──────────────────────────────────────────────────────────────────
 function HeroSection({ onBrowse }) {
@@ -231,7 +549,7 @@ function HeroSection({ onBrowse }) {
 }
 
 // ─── Results Browser ────────────────────────────────────────────────────────
-function ResultsBrowser() {
+function ResultsBrowser({ onRaceSelect }) {
   const [year, setYear] = useState(2026);
   const [province, setProvince] = useState("All");
   const [search, setSearch] = useState("");
@@ -248,9 +566,7 @@ function ResultsBrowser() {
     <div style={{ padding: "32px 24px", maxWidth: 1100, margin: "0 auto" }}>
       <h2 style={{ fontFamily: "'Playfair Display', serif", color: "#f5f0e0", fontSize: "2.2rem", marginBottom: 8 }}>Results</h2>
       <p style={{ color: "#6b7c6b", marginBottom: 32, fontFamily: "'DM Sans', sans-serif" }}>
-        Browse South African rowing regattas by year. Results open directly on{" "}
-        <a href="https://regattaresults.co.za" target="_blank" rel="noopener noreferrer"
-          style={{ color: "#d4a017", textDecoration: "none" }}>regattaresults.co.za</a>.
+        Browse South African rowing regattas by year. Click a race to view results.
       </p>
 
       {/* Year tabs */}
@@ -322,12 +638,10 @@ function ResultsBrowser() {
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 }}>
               {regattas.map(r => (
-                <a
+                <div
                   key={r.id}
-                  href={r.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ textDecoration: "none" }}
+                  onClick={() => r.status !== "Upcoming" && onRaceSelect(r)}
+                  style={{ textDecoration: "none", cursor: r.status !== "Upcoming" ? "pointer" : "default" }}
                 >
                   <div style={{
                     background: "linear-gradient(145deg, #0f220f, #0a1a0a)",
@@ -355,7 +669,7 @@ function ResultsBrowser() {
                       </span>
                     </div>
                   </div>
-                </a>
+                </div>
               ))}
             </div>
           )}
@@ -466,6 +780,13 @@ function Footer() {
 // ─── App ───────────────────────────────────────────────────────────────────
 export default function App() {
   const [page, setPage] = useState("home");
+  const [selectedRace, setSelectedRace] = useState(null);
+
+  function goHome() { setPage("home"); setSelectedRace(null); }
+  function goResults() { setPage("results"); setSelectedRace(null); }
+  function openRace(race) { setSelectedRace(race); window.scrollTo(0, 0); }
+
+  const isResults = page === "results" || selectedRace;
 
   return (
     <div style={{ background: "#0a1a0a", minHeight: "100vh" }}>
@@ -476,14 +797,14 @@ export default function App() {
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "0 32px", height: 60
       }}>
-        <button onClick={() => setPage("home")} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+        <button onClick={goHome} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
           <OarIcon />
           <span style={{ color: "#f5f0e0", fontFamily: "'Playfair Display', serif", fontWeight: 700, fontSize: "1rem" }}>Regatta Results SA</span>
         </button>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => setPage("results")} style={{
-            background: page === "results" ? "rgba(212,160,23,0.12)" : "none",
-            border: "none", color: page === "results" ? "#d4a017" : "#6b7c6b",
+          <button onClick={goResults} style={{
+            background: isResults ? "rgba(212,160,23,0.12)" : "none",
+            border: "none", color: isResults ? "#d4a017" : "#6b7c6b",
             cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
             padding: "6px 16px", borderRadius: 8, fontSize: 14, fontWeight: 500
           }}>Results</button>
@@ -496,9 +817,10 @@ export default function App() {
         </div>
       </nav>
 
-      <div style={{ paddingTop: page === "home" ? 0 : 60 }}>
-        {page === "home" && <HeroSection onBrowse={() => setPage("results")} />}
-        {page === "results" && <ResultsBrowser />}
+      <div style={{ paddingTop: page === "home" && !selectedRace ? 0 : 60 }}>
+        {page === "home" && !selectedRace && <HeroSection onBrowse={goResults} />}
+        {page === "results" && !selectedRace && <ResultsBrowser onRaceSelect={openRace} />}
+        {selectedRace && <RaceResultsPage race={selectedRace} onBack={() => { setSelectedRace(null); setPage("results"); }} />}
       </div>
 
       <DonateSection />
