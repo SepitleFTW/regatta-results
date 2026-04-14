@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import OarIcon from './components/OarIcon';
 import HeroSection from './components/HeroSection';
 import ResultsBrowser from './components/ResultsBrowser';
@@ -55,6 +56,7 @@ export default function App() {
       <DonateSection />
       <Footer />
       <Analytics />
+      <SpeedInsights />
     </div>
   );
 }
