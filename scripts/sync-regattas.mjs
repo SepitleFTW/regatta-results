@@ -1,7 +1,7 @@
 /**
  * Fetches the current year's regatta index page from regattaresults.co.za,
  * finds any new result links not already in our data, and writes them to
- * src/data/auto-discovered.json.
+ * regatta-results/src/data/auto-discovered.json.
  *
  * Runs as a GitHub Action on a daily schedule.
  */
@@ -11,7 +11,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(__dirname, '..');
+const PROJECT = join(__dirname, 'regatta-results');
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
@@ -24,8 +24,8 @@ const YEARS_TO_CHECK = [now.getFullYear(), now.getFullYear() - 1];
 
 // ── Load existing data ────────────────────────────────────────────────────────
 
-const autoPath = join(ROOT, 'src/data/auto-discovered.json');
-const regattasPath = join(ROOT, 'src/data/regattas.js');
+const autoPath = join(PROJECT, 'src/data/auto-discovered.json');
+const regattasPath = join(PROJECT, 'src/data/regattas.js');
 
 let autoDiscovered = {};
 try {
@@ -59,12 +59,11 @@ function toAbsolute(href) {
 
 function extractLinks(html) {
   const results = [];
-  // Match <a href="...results.htm...">Link text</a>
   const re = /<a\s[^>]*href="([^"]*results\.htm[^"]*)"[^>]*>([\s\S]*?)<\/a>/gi;
   let m;
   while ((m = re.exec(html)) !== null) {
     const href = toAbsolute(m[1].trim());
-    const raw = m[2].replace(/<[^>]+>/g, '').trim(); // strip inner tags
+    const raw = m[2].replace(/<[^>]+>/g, '').trim();
     results.push({ href, raw });
   }
   return results;
