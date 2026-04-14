@@ -18,7 +18,6 @@ export default function ResultsBrowser() {
   const [province, setProvince] = useState("All");
   const [search, setSearch] = useState("");
   const [fetched, setFetched] = useState(null);
-  const [fetchError, setFetchError] = useState(null);
 
   function changeYear(y) {
     setYear(y);
@@ -30,7 +29,6 @@ export default function ResultsBrowser() {
   useEffect(() => {
     let cancelled = false;
     setFetched(null);
-    setFetchError(null);
     fetch(`/rr-proxy/home/${yearSlug(year)}/`)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
       .then(html => {
@@ -60,7 +58,7 @@ export default function ResultsBrowser() {
           });
         setFetched([...hardcoded, ...newRaces]);
       })
-      .catch(e => { if (!cancelled) setFetchError(e.message); });
+      .catch(() => { if (!cancelled) setFetched(REGATTAS[year] || []); });
     return () => { cancelled = true; };
   }, [year]);
 
@@ -101,24 +99,7 @@ export default function ResultsBrowser() {
         </div>
       )}
 
-      {fetchError && (
-        <div style={{ background: "#0f220f", border: "1px solid #1a3a1a", borderRadius: 20, padding: "64px 48px", textAlign: "center" }}>
-          <div style={{ fontSize: 40, marginBottom: 20 }}>🚣</div>
-          <h3 style={{ color: "#f5f0e0", fontFamily: "'Playfair Display', serif", fontSize: "1.6rem", marginBottom: 12 }}>{year} Results</h3>
-          <p style={{ color: "#6b7c6b", fontFamily: "'DM Sans', sans-serif", marginBottom: 32, maxWidth: 400, margin: "0 auto 32px" }}>
-            View the full archive for {year} directly on regattaresults.co.za.
-          </p>
-          <a href={`https://regattaresults.co.za/home/${yearSlug(year)}/`} target="_blank" rel="noopener noreferrer" style={{
-            background: "#d4a017", color: "#030a03", borderRadius: 8, padding: "14px 32px",
-            fontSize: 15, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
-            textDecoration: "none", display: "inline-block",
-          }}>
-            View {year} on regattaresults.co.za →
-          </a>
-        </div>
-      )}
-
-      {fetched !== null && (
+{fetched !== null && (
         <>
           <div style={{ display: "flex", gap: 12, marginBottom: 28, flexWrap: "wrap", alignItems: "center" }}>
             <input
