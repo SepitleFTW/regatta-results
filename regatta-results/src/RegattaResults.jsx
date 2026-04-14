@@ -553,14 +553,52 @@ function ResultsBrowser({ onRaceSelect }) {
   const [year, setYear] = useState(2026);
   const [province, setProvince] = useState("All");
   const [search, setSearch] = useState("");
+  const [fetched, setFetched] = useState(null); // null=loading, []+=loaded
+  const [fetchError, setFetchError] = useState(null);
 
-  const hasData = !!REGATTAS[year];
-  const regattas = hasData
-    ? (REGATTAS[year] || []).filter(r =>
-      (province === "All" || r.province === province) &&
-      (search === "" || r.name.toLowerCase().includes(search.toLowerCase()) || r.location.toLowerCase().includes(search.toLowerCase()))
-    )
-    : [];
+  useEffect(() => {
+    let cancelled = false;
+    setFetched(null);
+    setFetchError(null);
+    fetch(`/rr-proxy/home/${year}-2/`)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
+      .then(html => {
+        if (cancelled) return;
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const links = [...doc.querySelectorAll('a[href*="results.htm"]')];
+        const hardcoded = REGATTAS[year] || [];
+        const norm = u => u.replace(/^https?:\/\/(www\.)?/, '');
+        const hardcodedNorms = new Set(hardcoded.map(r => norm(r.url)));
+        // Only pick up races from the live page that aren't already hardcoded
+        const newRaces = links
+          .filter(a => !hardcodedNorms.has(norm(a.getAttribute('href'))))
+          .map(a => {
+            const url = a.getAttribute('href');
+            const text = a.textContent.trim();
+            const lastDash = text.lastIndexOf(' - ');
+            const name = lastDash > 0 ? text.substring(0, lastDash).trim() : text;
+            const dateStr = lastDash > 0 ? text.substring(lastDash + 3).trim() : '';
+            return {
+              id: url.split('/').filter(Boolean).slice(-2)[0],
+              name,
+              date: dateStr ? `${dateStr} ${year}` : '',
+              location: '',
+              province: '',
+              status: 'Official',
+              url,
+            };
+          });
+        setFetched([...hardcoded, ...newRaces]);
+      })
+      .catch(e => { if (!cancelled) setFetchError(e.message); });
+    return () => { cancelled = true; };
+  }, [year]);
+
+  const allRegattas = fetched ?? REGATTAS[year] ?? [];
+  const regattas = allRegattas.filter(r =>
+    (province === "All" || r.province === province) &&
+    (search === "" || r.name.toLowerCase().includes(search.toLowerCase()) || r.location.toLowerCase().includes(search.toLowerCase()))
+  );
 
   return (
     <div style={{ padding: "32px 24px", maxWidth: 1100, margin: "0 auto" }}>
@@ -583,30 +621,33 @@ function ResultsBrowser({ onRaceSelect }) {
         ))}
       </div>
 
-      {/* If we don't have scraped data, link to the source site */}
-      {!hasData ? (
-        <div style={{
-          background: "#0f220f", border: "1px solid #1a3a1a", borderRadius: 20,
-          padding: "64px 48px", textAlign: "center"
-        }}>
+      {/* Loading */}
+      {fetched === null && !fetchError && (
+        <div style={{ padding: "80px 0", textAlign: "center", color: "#4a6b4a", fontFamily: "'DM Sans', sans-serif" }}>
+          Loading {year} regattas…
+        </div>
+      )}
+
+      {/* Error fallback */}
+      {fetchError && (
+        <div style={{ background: "#0f220f", border: "1px solid #1a3a1a", borderRadius: 20, padding: "64px 48px", textAlign: "center" }}>
           <div style={{ fontSize: 40, marginBottom: 20 }}>🚣</div>
-          <h3 style={{ color: "#f5f0e0", fontFamily: "'Playfair Display', serif", fontSize: "1.6rem", marginBottom: 12 }}>
-            {year} Results
-          </h3>
+          <h3 style={{ color: "#f5f0e0", fontFamily: "'Playfair Display', serif", fontSize: "1.6rem", marginBottom: 12 }}>{year} Results</h3>
           <p style={{ color: "#6b7c6b", fontFamily: "'DM Sans', sans-serif", marginBottom: 32, maxWidth: 400, margin: "0 auto 32px" }}>
             View the full archive for {year} directly on regattaresults.co.za.
           </p>
-          <a href={YEAR_PAGES[year]} target="_blank" rel="noopener noreferrer" style={{
-            background: "#d4a017", color: "#030a03", border: "none",
-            borderRadius: 8, padding: "14px 32px", fontSize: 15,
-            fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+          <a href={`https://regattaresults.co.za/home/${year}-2/`} target="_blank" rel="noopener noreferrer" style={{
+            background: "#d4a017", color: "#030a03", borderRadius: 8, padding: "14px 32px",
+            fontSize: 15, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
             textDecoration: "none", display: "inline-block",
-            boxShadow: "0 0 30px rgba(212,160,23,0.25)", transition: "all 0.2s"
           }}>
             View {year} on regattaresults.co.za →
           </a>
         </div>
-      ) : (
+      )}
+
+      {/* Loaded */}
+      {fetched !== null && (
         <>
           {/* Filters */}
           <div style={{ display: "flex", gap: 12, marginBottom: 28, flexWrap: "wrap", alignItems: "center" }}>
@@ -656,12 +697,12 @@ function ResultsBrowser({ onRaceSelect }) {
                     <div style={{ position: "absolute", top: 0, right: 0, width: 80, height: 80, background: "radial-gradient(circle, rgba(212,160,23,0.07) 0%, transparent 70%)", borderRadius: "0 16px 0 80px" }} />
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
                       <StatusBadge status={r.status} />
-                      <span style={{ color: "#2d5a1b", fontSize: 11, fontFamily: "'DM Mono', monospace" }}>{r.province}</span>
+                      {r.province && <span style={{ color: "#2d5a1b", fontSize: 11, fontFamily: "'DM Mono', monospace" }}>{r.province}</span>}
                     </div>
                     <h3 style={{ color: "#f5f0e0", fontFamily: "'Playfair Display', serif", fontSize: "1.15rem", marginBottom: 10, lineHeight: 1.3 }}>{r.name}</h3>
                     <div style={{ color: "#6b7c6b", fontSize: 13, fontFamily: "'DM Sans', sans-serif", display: "flex", flexDirection: "column", gap: 4 }}>
-                      <span>📅 {r.date}</span>
-                      <span>📍 {r.location}</span>
+                      {r.date && <span>📅 {r.date}</span>}
+                      {r.location && <span>📍 {r.location}</span>}
                     </div>
                     <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 6 }}>
                       <span style={{ color: "#d4a017", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>
