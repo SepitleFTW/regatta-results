@@ -2,18 +2,32 @@ import { useState } from 'react';
 
 const PRESETS = ["20", "50", "100", "200"];
 const MERCHANT_ID = "34560187";
+const MERCHANT_KEY = "a1ae0boxxeipe";
 const ITEM_NAME = "Regatta Results SA Donation";
 
-function buildPayFastUrl(amount) {
-  const params = new URLSearchParams({
-    cmd: '_donate',
-    receiver: MERCHANT_ID,
-    item_name: ITEM_NAME,
+function submitPayFast(amount) {
+  const fields = {
+    merchant_id: MERCHANT_ID,
+    merchant_key: MERCHANT_KEY,
     amount: parseFloat(amount).toFixed(2),
+    item_name: ITEM_NAME,
     return_url: window.location.origin + '/?donated=1',
     cancel_url: window.location.origin + '/#donate',
-  });
-  return `https://www.payfast.co.za/eng/process?${params.toString()}`;
+  };
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = 'https://www.payfast.co.za/eng/process';
+  form.target = '_blank';
+  for (const [name, value] of Object.entries(fields)) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  }
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
 }
 
 export default function DonateSection() {
@@ -25,7 +39,7 @@ export default function DonateSection() {
 
   function handleDonate() {
     if (!valid) return;
-    window.open(buildPayFastUrl(final), '_blank', 'noopener,noreferrer');
+    submitPayFast(final);
   }
 
   return (
