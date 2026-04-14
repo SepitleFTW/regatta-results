@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import OarIcon from './components/OarIcon';
 import HeroSection from './components/HeroSection';
 import ResultsBrowser from './components/ResultsBrowser';
@@ -53,6 +54,7 @@ export default function App() {
 
       <DonateSection />
       <Footer />
+      <Analytics />
     </div>
   );
 }
