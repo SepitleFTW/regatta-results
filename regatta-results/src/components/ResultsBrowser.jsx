@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react';
 import StatusBadge from './StatusBadge';
 import { YEARS, PROVINCES, REGATTAS } from '../data/regattas';
 
+// Some years use non-standard slugs on regattaresults.co.za
+const YEAR_SLUGS = {
+  2025: '2025-results',
+};
+const yearSlug = y => YEAR_SLUGS[y] ?? `${y}-2`;
+
 export default function ResultsBrowser({ onRaceSelect }) {
   const [year, setYear] = useState(2026);
   const [province, setProvince] = useState("All");
@@ -13,7 +19,7 @@ export default function ResultsBrowser({ onRaceSelect }) {
     let cancelled = false;
     setFetched(null);
     setFetchError(null);
-    fetch(`/rr-proxy/home/${year}-2/`)
+    fetch(`/rr-proxy/home/${yearSlug(year)}/`)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
       .then(html => {
         if (cancelled) return;
@@ -85,7 +91,7 @@ export default function ResultsBrowser({ onRaceSelect }) {
           <p style={{ color: "#6b7c6b", fontFamily: "'DM Sans', sans-serif", marginBottom: 32, maxWidth: 400, margin: "0 auto 32px" }}>
             View the full archive for {year} directly on regattaresults.co.za.
           </p>
-          <a href={`https://regattaresults.co.za/home/${year}-2/`} target="_blank" rel="noopener noreferrer" style={{
+          <a href={`https://regattaresults.co.za/home/${yearSlug(year)}/`} target="_blank" rel="noopener noreferrer" style={{
             background: "#d4a017", color: "#030a03", borderRadius: 8, padding: "14px 32px",
             fontSize: 15, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
             textDecoration: "none", display: "inline-block",
