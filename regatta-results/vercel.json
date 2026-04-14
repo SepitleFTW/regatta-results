@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/rr-proxy/:path*",
+      "destination": "https://regattaresults.co.za/:path*"
+    }
+  ]
+}
