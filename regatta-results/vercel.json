@@ -3,6 +3,10 @@
     {
       "source": "/rr-proxy/:path*",
       "destination": "https://regattaresults.co.za/:path*"
+    },
+    {
+      "source": "/((?!rr-proxy).*)",
+      "destination": "/index.html"
     }
   ]
 }

@@ -1,10 +1,26 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import StatusBadge from './StatusBadge';
 import { toProxyUrl, parseEventList, parseEventResults } from '../utils/proxy';
+import { REGATTAS } from '../data/regattas';
 
 const PLACE_MEDAL = { '1': '#d4a017', '2': '#9ca3af', '3': '#a0522d' };
 
-export default function RaceResultsPage({ race, onBack }) {
+function findRaceById(id) {
+  for (const races of Object.values(REGATTAS)) {
+    const found = races.find(r => r.id === id);
+    if (found) return found;
+  }
+  return null;
+}
+
+export default function RaceResultsPage() {
+  const { raceId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const race = location.state?.race || findRaceById(raceId);
+
   const [events, setEvents] = useState([]);
   const [eventSearch, setEventSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -14,7 +30,6 @@ export default function RaceResultsPage({ race, onBack }) {
   const [resultsLoading, setResultsLoading] = useState(false);
   const [resultsError, setResultsError] = useState(null);
 
-  const proxyUrl = toProxyUrl(race.url);
   const filteredEvents = eventSearch.trim()
     ? events.filter(ev =>
         ev.eventName.toLowerCase().includes(eventSearch.toLowerCase()) ||
@@ -25,16 +40,18 @@ export default function RaceResultsPage({ race, onBack }) {
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   useEffect(() => {
+    if (!race) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
+    const proxyUrl = toProxyUrl(race.url);
     fetch(proxyUrl)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
       .then(html => { if (!cancelled) setEvents(parseEventList(html, proxyUrl)); })
       .catch(e => { if (!cancelled) setError(e.message); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [proxyUrl]);
+  }, [race?.url]);
 
   function openEvent(ev) {
     setSelectedEvent(ev);
@@ -49,6 +66,23 @@ export default function RaceResultsPage({ race, onBack }) {
       .finally(() => setResultsLoading(false));
   }
 
+  if (!race) {
+    return (
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '80px 24px', textAlign: 'center' }}>
+        <div style={{ color: '#6b7c6b', fontFamily: "'DM Sans', sans-serif", marginBottom: 24 }}>
+          Race not found. It may have been fetched dynamically — go back and click it from the results list.
+        </div>
+        <button onClick={() => navigate('/results')} style={{
+          background: 'none', border: '1px solid #1a3a1a', color: '#d4a017', cursor: 'pointer',
+          fontFamily: "'DM Mono', monospace", fontSize: 12, letterSpacing: '0.12em',
+          textTransform: 'uppercase', padding: '10px 20px', borderRadius: 8,
+        }}>
+          ← Back to results
+        </button>
+      </div>
+    );
+  }
+
   const raceLabel = selectedEvent
     ? selectedEvent.race.includes(' - ')
       ? selectedEvent.race.split(' - ').slice(1).join(' ')
@@ -58,7 +92,7 @@ export default function RaceResultsPage({ race, onBack }) {
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
       <button
-        onClick={() => selectedEvent ? setSelectedEvent(null) : onBack()}
+        onClick={() => selectedEvent ? setSelectedEvent(null) : navigate('/results')}
         style={{
           background: 'none', border: 'none', color: '#d4a017', cursor: 'pointer',
           fontFamily: "'DM Mono', monospace", fontSize: 12, letterSpacing: '0.12em',

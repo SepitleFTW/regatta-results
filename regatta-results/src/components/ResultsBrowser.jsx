@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import StatusBadge from './StatusBadge';
 import { YEARS, PROVINCES, REGATTAS } from '../data/regattas';
 
@@ -8,12 +9,23 @@ const YEAR_SLUGS = {
 };
 const yearSlug = y => YEAR_SLUGS[y] ?? `${y}-2`;
 
-export default function ResultsBrowser({ onRaceSelect }) {
-  const [year, setYear] = useState(2026);
+export default function ResultsBrowser() {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const urlYear = parseInt(searchParams.get('year'));
+  const [year, setYear] = useState(YEARS.includes(urlYear) ? urlYear : 2026);
   const [province, setProvince] = useState("All");
   const [search, setSearch] = useState("");
   const [fetched, setFetched] = useState(null);
   const [fetchError, setFetchError] = useState(null);
+
+  function changeYear(y) {
+    setYear(y);
+    setSearch("");
+    setProvince("All");
+    setSearchParams({ year: y });
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -58,6 +70,11 @@ export default function ResultsBrowser({ onRaceSelect }) {
     (search === "" || r.name.toLowerCase().includes(search.toLowerCase()) || r.location.toLowerCase().includes(search.toLowerCase()))
   );
 
+  function openRace(race) {
+    if (race.status === "Upcoming") return;
+    navigate(`/results/${race.id}`, { state: { race } });
+  }
+
   return (
     <div style={{ padding: "32px 24px", maxWidth: 1100, margin: "0 auto" }}>
       <h2 style={{ fontFamily: "'Playfair Display', serif", color: "#f5f0e0", fontSize: "2.2rem", marginBottom: 8 }}>Results</h2>
@@ -67,7 +84,7 @@ export default function ResultsBrowser({ onRaceSelect }) {
 
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 28, borderBottom: "1px solid #1a3a1a", paddingBottom: 16 }}>
         {YEARS.map(y => (
-          <button key={y} onClick={() => { setYear(y); setSearch(""); setProvince("All"); }} style={{
+          <button key={y} onClick={() => changeYear(y)} style={{
             background: year === y ? "#d4a017" : "transparent",
             color: year === y ? "#030a03" : "#6b7c6b",
             border: year === y ? "none" : "1px solid #1a3a1a",
@@ -133,7 +150,7 @@ export default function ResultsBrowser({ onRaceSelect }) {
               {regattas.map(r => (
                 <div
                   key={r.id}
-                  onClick={() => r.status !== "Upcoming" && onRaceSelect(r)}
+                  onClick={() => openRace(r)}
                   style={{ cursor: r.status !== "Upcoming" ? "pointer" : "default" }}
                 >
                   <div style={{
