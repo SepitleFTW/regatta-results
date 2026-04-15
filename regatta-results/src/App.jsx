@@ -8,6 +8,7 @@ import ResultsBrowser from './components/ResultsBrowser';
 import RaceResultsPage from './components/RaceResultsPage';
 import AthleteSearch from './components/AthleteSearch';
 import RegattaCalendar from './components/RegattaCalendar';
+import CourseRecords from './components/CourseRecords';
 import DonateSection from './components/DonateSection';
 import Footer from './components/Footer';
 
@@ -15,6 +16,7 @@ const NAV_LINKS = [
   { label: 'Results', path: '/results' },
   { label: 'Search', path: '/search' },
   { label: 'Calendar', path: '/calendar' },
+  { label: 'Records', path: '/records' },
 ];
 
 export default function App() {
@@ -139,6 +141,7 @@ export default function App() {
           <Route path="/results/:raceId" element={<RaceResultsPage />} />
           <Route path="/search" element={<AthleteSearch />} />
           <Route path="/calendar" element={<RegattaCalendar />} />
+          <Route path="/records" element={<CourseRecords />} />
         </Routes>
       </div>
 
