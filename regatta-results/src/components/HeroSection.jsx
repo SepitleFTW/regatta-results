@@ -1,4 +1,43 @@
+import { useState, useEffect } from 'react';
 import OarIcon from './OarIcon';
+import { REGATTAS } from '../data/regattas';
+
+const MONTH_SHORT = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
+
+function parseFirstDate(str) {
+  if (!str) return null;
+  const m = str.match(/(\d{1,2})\s*(–|-|&)?\s*\d*\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/);
+  if (m) return new Date(+m[4], MONTH_SHORT[m[3]], +m[1]);
+  const m2 = str.match(/(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/);
+  if (m2) return new Date(+m2[3], MONTH_SHORT[m2[2]], +m2[1]);
+  return null;
+}
+
+function getNextRegatta() {
+  const now = new Date();
+  const all = Object.values(REGATTAS).flat()
+    .map(r => ({ ...r, _date: parseFirstDate(r.date) }))
+    .filter(r => r._date && r._date >= now)
+    .sort((a, b) => a._date - b._date);
+  return all[0] || null;
+}
+
+function useCountdown(target) {
+  const [diff, setDiff] = useState(target ? target - Date.now() : 0);
+  useEffect(() => {
+    if (!target) return;
+    const id = setInterval(() => setDiff(target - Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [target]);
+  if (!target || diff <= 0) return null;
+  const total = Math.floor(diff / 1000);
+  return {
+    days: Math.floor(total / 86400),
+    hours: Math.floor((total % 86400) / 3600),
+    minutes: Math.floor((total % 3600) / 60),
+    seconds: total % 60,
+  };
+}
 
 function Wave() {
   return (
@@ -45,6 +84,9 @@ function SAFlag({ width = 120, style = {} }) {
 }
 
 export default function HeroSection({ onBrowse }) {
+  const nextRegatta = getNextRegatta();
+  const countdown = useCountdown(nextRegatta?._date?.getTime());
+
   return (
     <section style={{
       background: "linear-gradient(160deg, #030a03 0%, #0a1e0a 50%, #061506 100%)",
@@ -150,7 +192,38 @@ export default function HeroSection({ onBrowse }) {
           </a>
         </div>
 
-        <div style={{ display: "flex", gap: 48, justifyContent: "center", marginTop: 72, flexWrap: "wrap" }}>
+        {/* Countdown to next regatta */}
+        {countdown && nextRegatta && (
+          <div style={{ marginTop: 48, marginBottom: 0 }}>
+            <div style={{ color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 10, textAlign: 'center' }}>
+              Next · {nextRegatta.name}
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              {[
+                [countdown.days,    'Days'],
+                [countdown.hours,   'Hrs'],
+                [countdown.minutes, 'Min'],
+                [countdown.seconds, 'Sec'],
+              ].map(([val, label]) => (
+                <div key={label} style={{
+                  background: 'rgba(10,26,10,0.8)',
+                  border: '1px solid #1a3a1a',
+                  borderRadius: 10, padding: '12px 16px', minWidth: 60, textAlign: 'center',
+                  backdropFilter: 'blur(8px)',
+                }}>
+                  <div style={{ color: '#d4a017', fontFamily: "'Playfair Display', serif", fontSize: '1.6rem', fontWeight: 700, lineHeight: 1 }}>
+                    {String(val).padStart(2, '0')}
+                  </div>
+                  <div style={{ color: '#2d5a1b', fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 4 }}>
+                    {label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 48, justifyContent: "center", marginTop: 48, flexWrap: "wrap" }}>
           {[["13+", "Years of Results"], ["500+", "Regattas Archived"]].map(([num, label]) => (
             <div key={label} style={{ textAlign: "center" }}>
               <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "2.2rem", fontWeight: 700, color: "#d4a017" }}>{num}</div>

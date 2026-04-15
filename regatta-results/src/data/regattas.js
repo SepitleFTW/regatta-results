@@ -20,6 +20,7 @@ export const REGATTAS = {
     { id: "assumption-feb-2026", name: "Assumption U14, U15 & Masters", date: "28 Feb 2026", location: "Roodeplaat Dam", province: "Gauteng", status: "Official", url: `${BASE}/Results2026/2026-Feb-AC1415M/results.htm` },
     { id: "sa-schools-2026", name: "SA Schools Champs", date: "6–8 Mar 2026", location: "Roodeplaat Dam", province: "Gauteng", status: "Official", url: `${BASE}/Results2026/2026-Feb-SASChamps/results.htm` },
     { id: "gp-sr-champs-2026", name: "Gauteng Senior Champs", date: "11 Apr 2026", location: "Roodeplaat Dam", province: "Gauteng", status: "Official", url: `${BASE}/Results2026/2026-april11-snr/results.htm` },
+    { id: "sa-champs-2026", name: "SA National Rowing Champs", date: "25–26 Apr 2026", location: "Roodeplaat Dam", province: "Gauteng", status: "Upcoming", url: `${BASE}/Results2026/2026-Apr-SANChamps/results.htm` },
   ],
   2025: [
     { id: "kes-2025", name: "KES GSRF U16 & U19 Regatta", date: "18 Jan 2025", location: "Roodeplaat Dam", province: "Gauteng", status: "Official", url: `${BASE}/Results2025/2025-Jan-KES1619/results.htm` },
