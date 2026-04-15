@@ -18,6 +18,7 @@ export function parseEventList(html, proxyUrl) {
         race: cells[2]?.textContent.trim(),
         time: cells[4]?.textContent.trim(),
         status: cells[5]?.textContent.trim(),
+        progression: cells[6]?.textContent.trim() || '',
         detailsUrl: href ? baseDir + href : null,
       };
     })

@@ -219,6 +219,23 @@ export default function RaceResultsPage() {
           </div>
         ) : results ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {/* Progression banner */}
+            {selectedEvent.progression && selectedEvent.progression.toLowerCase() !== 'final only' && (
+              <div style={{
+                background: 'linear-gradient(135deg, #0f1e0a, #0a1a14)',
+                border: '1px solid #1a3a2a',
+                borderLeft: '3px solid #d4a017',
+                borderRadius: 10, padding: '10px 16px',
+                display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4,
+              }}>
+                <span style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', flexShrink: 0 }}>
+                  Progression
+                </span>
+                <span style={{ color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif", fontSize: 13 }}>
+                  {selectedEvent.progression}
+                </span>
+              </div>
+            )}
             {results.map((row, i) => {
               const medalColor = PLACE_MEDAL[row.place];
               const isFinished = !row.status.toLowerCase().includes('scratch') &&
