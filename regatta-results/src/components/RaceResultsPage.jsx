@@ -247,22 +247,26 @@ export default function RaceResultsPage() {
                 <div key={i} style={{
                   background: isFirst ? 'linear-gradient(145deg, #1c1600, #0f220f)' : 'linear-gradient(145deg, #0f220f, #0a1a0a)',
                   border: `1px solid ${isFirst ? '#3d2e00' : '#1a3a1a'}`,
-                  borderRadius: 10, padding: '14px 18px',
-                  display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+                  borderRadius: 10, padding: isMobile ? '12px 12px' : '14px 18px',
+                  display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16,
                 }}>
                   <div style={{
-                    width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                    width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
                     background: isFinished && medalColor ? `${medalColor}18` : 'transparent',
                     border: `2px solid ${isFinished ? (medalColor || '#1a3a1a') : '#2d1b1b'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     color: isFinished ? (medalColor || '#4a6b4a') : '#4a6b4a',
-                    fontFamily: "'DM Mono', monospace", fontWeight: 700, fontSize: 13,
+                    fontFamily: "'DM Mono', monospace", fontWeight: 700, fontSize: 12,
                   }}>
                     {isFinished ? row.place : '–'}
                   </div>
 
-                  <div style={{ flex: 1, minWidth: 120 }}>
-                    <div style={{ color: '#f5f0e0', fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, marginBottom: 2 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      color: '#f5f0e0', fontFamily: "'DM Sans', sans-serif",
+                      fontSize: isMobile ? 13 : 14, fontWeight: 600, marginBottom: 2,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
                       {row.athlete || '—'}
                     </div>
                     <div style={{ color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: '0.04em' }}>

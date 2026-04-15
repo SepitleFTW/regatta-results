@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import OarIcon from './OarIcon';
 import { REGATTAS } from '../data/regattas';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const MONTH_SHORT = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
 
@@ -47,43 +48,24 @@ function Wave() {
   );
 }
 
-// Accurate South African flag SVG
-// Layer order: red bg, blue bg, white pall, green pall, gold pall, black triangle
 function SAFlag({ width = 120, style = {} }) {
-  const W = 300, H = 200;
-  const cx = 110; // convergence x (~1/3 of width)
-  const cy = H / 2;
-  const wH = 40; // white pall half-height at stem
-  const gH = 33; // green pall half-height at stem
-  const oH = 21; // gold pall half-height at stem
-
+  const W = 300, H = 200, cx = 110, cy = H / 2;
   const pall = (h) =>
     `0,0 0,${H} ${cx},${cy + h} ${W},${cy + h} ${W},${cy - h} ${cx},${cy - h}`;
-
   return (
-    <svg
-      viewBox={`0 0 ${W} ${H}`}
-      width={width}
-      height={width * (H / W)}
-      style={{ display: 'block', ...style }}
-    >
-      {/* Red top half */}
+    <svg viewBox={`0 0 ${W} ${H}`} width={width} height={width * (H / W)} style={{ display: 'block', ...style }}>
       <rect x={0} y={0} width={W} height={cy} fill="#DE3831" />
-      {/* Blue bottom half */}
       <rect x={0} y={cy} width={W} height={cy} fill="#002395" />
-      {/* White pall */}
-      <polygon points={pall(wH)} fill="#FFFFFF" />
-      {/* Green pall */}
-      <polygon points={pall(gH)} fill="#007A4D" />
-      {/* Gold pall */}
-      <polygon points={pall(oH)} fill="#FFB612" />
-      {/* Black triangle */}
+      <polygon points={pall(40)} fill="#FFFFFF" />
+      <polygon points={pall(33)} fill="#007A4D" />
+      <polygon points={pall(21)} fill="#FFB612" />
       <polygon points={`0,0 0,${H} ${cx},${cy}`} fill="#000000" />
     </svg>
   );
 }
 
 export default function HeroSection({ onBrowse }) {
+  const isMobile = useIsMobile();
   const nextRegatta = getNextRegatta();
   const countdown = useCountdown(nextRegatta?._date?.getTime());
 
@@ -93,7 +75,6 @@ export default function HeroSection({ onBrowse }) {
       minHeight: "100vh", display: "flex", flexDirection: "column",
       justifyContent: "center", alignItems: "center", position: "relative", overflow: "hidden"
     }}>
-      {/* Animated gold wave lines */}
       {[...Array(6)].map((_, i) => (
         <div key={i} style={{
           position: "absolute", left: 0, right: 0,
@@ -104,38 +85,43 @@ export default function HeroSection({ onBrowse }) {
         }} />
       ))}
 
-      {/* Large faint SA flag watermark — blends into the dark background */}
+      {/* SA flag watermark — smaller on mobile */}
       <div style={{
         position: "absolute", top: "50%", left: "50%",
         transform: "translate(-50%, -50%)",
-        pointerEvents: "none",
-        opacity: 0.055,
-        filter: "blur(1.5px)",
+        pointerEvents: "none", opacity: 0.055, filter: "blur(1.5px)",
       }}>
-        <SAFlag width={600} />
+        <SAFlag width={isMobile ? 320 : 600} />
       </div>
 
-      {/* Soft radial glow centred on the flag */}
       <div style={{
-        position: "absolute", width: 600, height: 400,
+        position: "absolute", width: isMobile ? 300 : 600, height: isMobile ? 200 : 400,
         borderRadius: "50%", top: "50%", left: "50%",
         transform: "translate(-50%,-50%)",
         background: "radial-gradient(ellipse, rgba(212,160,23,0.07) 0%, transparent 70%)",
         pointerEvents: "none"
       }} />
 
-      <div style={{ position: "relative", textAlign: "center", padding: "0 24px", maxWidth: 800 }}>
-        {/* Badge row — small flag + text + oar */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 24 }}>
+      <div style={{
+        position: "relative", textAlign: "center",
+        padding: isMobile ? "80px 20px 40px" : "0 24px",
+        maxWidth: 800, width: "100%",
+      }}>
+        {/* Badge row */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 20 }}>
           <div style={{
             borderRadius: 4, overflow: "hidden",
             boxShadow: "0 2px 12px rgba(0,0,0,0.6)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            flexShrink: 0,
+            border: "1px solid rgba(255,255,255,0.1)", flexShrink: 0,
           }}>
-            <SAFlag width={36} />
+            <SAFlag width={isMobile ? 28 : 36} />
           </div>
-          <span style={{ color: "#d4a017", fontFamily: "'DM Mono', monospace", fontSize: 13, letterSpacing: "0.25em", textTransform: "uppercase" }}>
+          <span style={{
+            color: "#d4a017", fontFamily: "'DM Mono', monospace",
+            fontSize: isMobile ? 10 : 13,
+            letterSpacing: isMobile ? "0.15em" : "0.25em",
+            textTransform: "uppercase",
+          }}>
             South African Rowing
           </span>
           <OarIcon />
@@ -143,35 +129,43 @@ export default function HeroSection({ onBrowse }) {
 
         <h1 style={{
           fontFamily: "'Playfair Display', Georgia, serif",
-          fontSize: "clamp(3rem, 8vw, 6.5rem)",
+          fontSize: "clamp(2.6rem, 8vw, 6.5rem)",
           fontWeight: 900, lineHeight: 1.0,
           color: "#f5f0e0", margin: "0 0 8px",
           textShadow: "0 0 80px rgba(212,160,23,0.3)"
         }}>Regatta</h1>
         <h1 style={{
           fontFamily: "'Playfair Display', Georgia, serif",
-          fontSize: "clamp(3rem, 8vw, 6.5rem)",
+          fontSize: "clamp(2.6rem, 8vw, 6.5rem)",
           fontWeight: 900, lineHeight: 1.0,
           background: "linear-gradient(90deg, #d4a017, #f0c040, #fde68a)",
           WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-          margin: "0 0 32px"
+          margin: "0 0 24px"
         }}>Results</h1>
 
         <p style={{
-          color: "#94a3b8", fontSize: "clamp(1rem, 2.5vw, 1.2rem)",
-          lineHeight: 1.7, maxWidth: 560, margin: "0 auto 48px",
-          fontFamily: "'DM Sans', sans-serif"
+          color: "#94a3b8", fontSize: "clamp(0.9rem, 2.5vw, 1.2rem)",
+          lineHeight: 1.7, maxWidth: 560, margin: "0 auto 36px",
+          fontFamily: "'DM Sans', sans-serif",
+          padding: isMobile ? "0 4px" : 0,
         }}>
           The home of South African competitive rowing results — from school regattas to national championships, all in one place.
         </p>
 
-        <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+        {/* CTA buttons — stack on mobile */}
+        <div style={{
+          display: "flex", gap: 12,
+          justifyContent: "center",
+          flexDirection: isMobile ? "column" : "row",
+          alignItems: "center",
+        }}>
           <button onClick={onBrowse} style={{
             background: "#d4a017", color: "#030a03", border: "none",
-            borderRadius: 8, padding: "14px 36px", fontSize: 16,
-            fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-            letterSpacing: "0.02em", transition: "all 0.2s",
-            boxShadow: "0 0 40px rgba(212,160,23,0.3)"
+            borderRadius: 8, padding: isMobile ? "14px 0" : "14px 36px",
+            fontSize: 16, fontWeight: 700, cursor: "pointer",
+            fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.02em",
+            transition: "all 0.2s", boxShadow: "0 0 40px rgba(212,160,23,0.3)",
+            width: isMobile ? "100%" : "auto",
           }}
             onMouseEnter={e => { e.target.style.background = "#f0c040"; e.target.style.transform = "translateY(-2px)"; }}
             onMouseLeave={e => { e.target.style.background = "#d4a017"; e.target.style.transform = "translateY(0)"; }}
@@ -181,9 +175,12 @@ export default function HeroSection({ onBrowse }) {
           <a href="#donate" onClick={e => { e.preventDefault(); document.getElementById("donate")?.scrollIntoView({ behavior: "smooth" }); }} style={{
             background: "transparent", color: "#d4a017",
             border: "1px solid rgba(212,160,23,0.4)",
-            borderRadius: 8, padding: "14px 36px", fontSize: 16,
-            fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-            textDecoration: "none", display: "inline-block", transition: "all 0.2s"
+            borderRadius: 8, padding: isMobile ? "14px 0" : "14px 36px",
+            fontSize: 16, fontWeight: 600, cursor: "pointer",
+            fontFamily: "'DM Sans', sans-serif", textDecoration: "none",
+            display: isMobile ? "block" : "inline-block",
+            width: isMobile ? "100%" : "auto",
+            transition: "all 0.2s", boxSizing: "border-box",
           }}
             onMouseEnter={e => { e.target.style.borderColor = "#d4a017"; e.target.style.background = "rgba(212,160,23,0.08)"; }}
             onMouseLeave={e => { e.target.style.borderColor = "rgba(212,160,23,0.4)"; e.target.style.background = "transparent"; }}
@@ -192,13 +189,18 @@ export default function HeroSection({ onBrowse }) {
           </a>
         </div>
 
-        {/* Countdown to next regatta */}
+        {/* Countdown */}
         {countdown && nextRegatta && (
-          <div style={{ marginTop: 48, marginBottom: 0 }}>
-            <div style={{ color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 10, textAlign: 'center' }}>
+          <div style={{ marginTop: 36 }}>
+            <div style={{
+              color: '#4a6b4a', fontFamily: "'DM Mono', monospace",
+              fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase',
+              marginBottom: 10, textAlign: 'center',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
               Next · {nextRegatta.name}
             </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: isMobile ? 6 : 10, justifyContent: 'center' }}>
               {[
                 [countdown.days,    'Days'],
                 [countdown.hours,   'Hrs'],
@@ -206,15 +208,25 @@ export default function HeroSection({ onBrowse }) {
                 [countdown.seconds, 'Sec'],
               ].map(([val, label]) => (
                 <div key={label} style={{
-                  background: 'rgba(10,26,10,0.8)',
-                  border: '1px solid #1a3a1a',
-                  borderRadius: 10, padding: '12px 16px', minWidth: 60, textAlign: 'center',
-                  backdropFilter: 'blur(8px)',
+                  background: 'rgba(10,26,10,0.8)', border: '1px solid #1a3a1a',
+                  borderRadius: 10,
+                  padding: isMobile ? '10px 12px' : '12px 16px',
+                  minWidth: isMobile ? 0 : 60,
+                  flex: isMobile ? 1 : 'none',
+                  textAlign: 'center', backdropFilter: 'blur(8px)',
                 }}>
-                  <div style={{ color: '#d4a017', fontFamily: "'Playfair Display', serif", fontSize: '1.6rem', fontWeight: 700, lineHeight: 1 }}>
+                  <div style={{
+                    color: '#d4a017', fontFamily: "'Playfair Display', serif",
+                    fontSize: isMobile ? '1.3rem' : '1.6rem',
+                    fontWeight: 700, lineHeight: 1,
+                  }}>
                     {String(val).padStart(2, '0')}
                   </div>
-                  <div style={{ color: '#2d5a1b', fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 4 }}>
+                  <div style={{
+                    color: '#2d5a1b', fontFamily: "'DM Mono', monospace",
+                    fontSize: 9, letterSpacing: '0.1em',
+                    textTransform: 'uppercase', marginTop: 4,
+                  }}>
                     {label}
                   </div>
                 </div>
@@ -223,11 +235,23 @@ export default function HeroSection({ onBrowse }) {
           </div>
         )}
 
-        <div style={{ display: "flex", gap: 48, justifyContent: "center", marginTop: 48, flexWrap: "wrap" }}>
+        {/* Stats row */}
+        <div style={{
+          display: "flex", gap: isMobile ? 24 : 48,
+          justifyContent: "center", marginTop: 36, flexWrap: "wrap",
+        }}>
           {[["13+", "Years of Results"], ["500+", "Regattas Archived"]].map(([num, label]) => (
             <div key={label} style={{ textAlign: "center" }}>
-              <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "2.2rem", fontWeight: 700, color: "#d4a017" }}>{num}</div>
-              <div style={{ color: "#4a6b4a", fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "'DM Mono', monospace" }}>{label}</div>
+              <div style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: isMobile ? "1.8rem" : "2.2rem",
+                fontWeight: 700, color: "#d4a017",
+              }}>{num}</div>
+              <div style={{
+                color: "#4a6b4a", fontSize: 11,
+                letterSpacing: "0.1em", textTransform: "uppercase",
+                fontFamily: "'DM Mono', monospace",
+              }}>{label}</div>
             </div>
           ))}
         </div>

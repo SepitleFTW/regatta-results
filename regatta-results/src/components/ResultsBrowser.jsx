@@ -151,7 +151,7 @@ export default function ResultsBrowser() {
               }}>No regattas found for the selected filters.</div>
             )
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(300px, 1fr))", gap: isMobile ? 12 : 20 }}>
               {regattas.map(r => (
                 <div
                   key={r.id}
