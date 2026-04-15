@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import StatusBadge from './StatusBadge';
 import { toProxyUrl, parseEventList, parseEventResults } from '../utils/proxy';
 import { REGATTAS } from '../data/regattas';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const PLACE_MEDAL = { '1': '#d4a017', '2': '#9ca3af', '3': '#a0522d' };
 
@@ -18,6 +19,7 @@ export default function RaceResultsPage() {
   const { raceId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const race = location.state?.race || findRaceById(raceId);
 
@@ -90,7 +92,7 @@ export default function RaceResultsPage() {
     : null;
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
+    <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? '24px 14px' : '32px 24px' }}>
       <button
         onClick={() => selectedEvent ? setSelectedEvent(null) : navigate('/results')}
         style={{
@@ -190,8 +192,8 @@ export default function RaceResultsPage() {
                       </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-                    <span style={{ color: '#6b7c6b', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>{ev.time}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flexShrink: 0 }}>
+                    {!isMobile && <span style={{ color: '#6b7c6b', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>{ev.time}</span>}
                     <StatusBadge status={ev.status === 'Official' ? 'Official' : 'Scheduled'} />
                     <span style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 13 }}>→</span>
                   </div>

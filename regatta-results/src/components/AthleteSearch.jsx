@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { YEARS, REGATTAS } from '../data/regattas';
 import { toProxyUrl, parseEventList, parseEventResults } from '../utils/proxy';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const CONCURRENCY = 8;
 
@@ -25,6 +26,7 @@ const PLACE_COLOR = { '1': '#d4a017', '2': '#9ca3af', '3': '#a0522d' };
 
 export default function AthleteSearch() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [year, setYear] = useState(2026);
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);
@@ -96,16 +98,16 @@ export default function AthleteSearch() {
   const pct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
-      <h2 style={{ fontFamily: "'Playfair Display', serif", color: '#f5f0e0', fontSize: '2.2rem', marginBottom: 8 }}>
+    <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? '24px 16px' : '32px 24px' }}>
+      <h2 style={{ fontFamily: "'Playfair Display', serif", color: '#f5f0e0', fontSize: isMobile ? '1.8rem' : '2.2rem', marginBottom: 8 }}>
         Athlete Search
       </h2>
-      <p style={{ color: '#6b7c6b', marginBottom: 32, fontFamily: "'DM Sans', sans-serif" }}>
+      <p style={{ color: '#6b7c6b', marginBottom: 24, fontFamily: "'DM Sans', sans-serif", fontSize: isMobile ? 14 : 16 }}>
         Search for an athlete or school across all events in a season.
       </p>
 
       {/* Search form */}
-      <form onSubmit={handleSearch} style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
+      <form onSubmit={handleSearch} style={{ display: 'flex', gap: 10, marginBottom: 28, flexDirection: isMobile ? 'column' : 'row' }}>
         <select
           value={year}
           onChange={e => setYear(parseInt(e.target.value))}
@@ -114,6 +116,7 @@ export default function AthleteSearch() {
             background: '#0f220f', border: '1px solid #1a3a1a', borderRadius: 8,
             padding: '10px 16px', color: '#e8e0c8', fontFamily: "'DM Mono', monospace",
             fontSize: 14, cursor: 'pointer', outline: 'none',
+            width: isMobile ? '100%' : 'auto',
           }}
         >
           {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
@@ -127,7 +130,7 @@ export default function AthleteSearch() {
           style={{
             background: '#0f220f', border: '1px solid #1a3a1a', borderRadius: 8,
             padding: '10px 16px', color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif",
-            fontSize: 14, flex: 1, minWidth: 220, outline: 'none',
+            fontSize: 14, flex: 1, outline: 'none',
           }}
         />
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const PRESETS = ["20", "50", "100", "200"];
 const MERCHANT_ID = "34560187";
@@ -31,6 +32,7 @@ function submitPayFast(amount) {
 }
 
 export default function DonateSection() {
+  const isMobile = useIsMobile();
   const [amount, setAmount] = useState("50");
   const [custom, setCustom] = useState("");
 
@@ -45,7 +47,7 @@ export default function DonateSection() {
   return (
     <section id="donate" style={{
       background: "#030a03", borderTop: "1px solid #1a3a1a",
-      padding: "80px 24px", textAlign: "center"
+      padding: isMobile ? "48px 16px" : "80px 24px", textAlign: "center"
     }}>
       <div style={{ maxWidth: 560, margin: "0 auto" }}>
         <span style={{ color: "#d4a017", fontFamily: "'DM Mono', monospace", fontSize: 12, letterSpacing: "0.2em", textTransform: "uppercase" }}>Keep the oars moving</span>
@@ -54,7 +56,7 @@ export default function DonateSection() {
           This platform is maintained by volunteers passionate about South African rowing. Your donation helps keep it free, fast, and up to date for clubs, parents, coaches, and athletes across the country.
         </p>
 
-        <div style={{ background: "#0f220f", border: "1px solid #1a3a1a", borderRadius: 20, padding: "36px" }}>
+        <div style={{ background: "#0f220f", border: "1px solid #1a3a1a", borderRadius: 20, padding: isMobile ? "24px 16px" : "36px" }}>
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginBottom: 20 }}>
             {PRESETS.map(p => (
               <button key={p} onClick={() => { setAmount(p); setCustom(""); }} style={{

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { REGATTAS } from '../data/regattas';
 import StatusBadge from './StatusBadge';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTH_SHORT = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
@@ -19,6 +20,7 @@ function parseDate(str) {
 
 export default function RegattaCalendar() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
 
@@ -38,30 +40,32 @@ export default function RegattaCalendar() {
   const upcomingCount = regattas.filter(r => r._date >= now).length;
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
-      <h2 style={{ fontFamily: "'Playfair Display', serif", color: '#f5f0e0', fontSize: '2.2rem', marginBottom: 8 }}>
+    <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? '24px 16px' : '32px 24px' }}>
+      <h2 style={{ fontFamily: "'Playfair Display', serif", color: '#f5f0e0', fontSize: isMobile ? '1.8rem' : '2.2rem', marginBottom: 8 }}>
         Calendar
       </h2>
-      <p style={{ color: '#6b7c6b', marginBottom: 32, fontFamily: "'DM Sans', sans-serif" }}>
+      <p style={{ color: '#6b7c6b', marginBottom: 24, fontFamily: "'DM Sans', sans-serif", fontSize: isMobile ? 14 : 16 }}>
         South African rowing regattas by season.
       </p>
 
       {/* Year tabs */}
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 32, borderBottom: '1px solid #1a3a1a', paddingBottom: 16 }}>
-        {[2026, 2025, 2024].map(y => (
-          <button key={y} onClick={() => setYear(y)} style={{
-            background: year === y ? '#d4a017' : 'transparent',
-            color: year === y ? '#030a03' : '#6b7c6b',
-            border: year === y ? 'none' : '1px solid #1a3a1a',
-            borderRadius: 8, padding: '7px 18px', fontSize: 14,
-            fontWeight: year === y ? 700 : 500, cursor: 'pointer',
-            fontFamily: "'DM Mono', monospace", transition: 'all 0.15s',
-          }}>{y}</button>
-        ))}
+      <div style={{ overflowX: 'auto', marginBottom: 28, borderBottom: '1px solid #1a3a1a', paddingBottom: 16, WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ display: 'flex', gap: 6, width: 'max-content' }}>
+          {[2026, 2025, 2024].map(y => (
+            <button key={y} onClick={() => setYear(y)} style={{
+              background: year === y ? '#d4a017' : 'transparent',
+              color: year === y ? '#030a03' : '#6b7c6b',
+              border: year === y ? 'none' : '1px solid #1a3a1a',
+              borderRadius: 8, padding: '7px 18px', fontSize: 14,
+              fontWeight: year === y ? 700 : 500, cursor: 'pointer',
+              fontFamily: "'DM Mono', monospace", transition: 'all 0.15s', whiteSpace: 'nowrap',
+            }}>{y}</button>
+          ))}
+        </div>
       </div>
 
       {/* Stats row */}
-      <div style={{ display: 'flex', gap: 24, marginBottom: 32, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: isMobile ? 12 : 24, marginBottom: 28, flexWrap: 'wrap' }}>
         {[
           [`${regattas.length}`, 'Total regattas'],
           [`${upcomingCount}`, 'Upcoming'],
@@ -112,8 +116,8 @@ export default function RegattaCalendar() {
                       style={{
                         background: isUpcoming ? 'linear-gradient(145deg, #122612, #0f220f)' : 'linear-gradient(145deg, #0f220f, #0a1a0a)',
                         border: `1px solid ${isUpcoming ? '#1e4a1e' : '#1a3a1a'}`,
-                        borderRadius: 12, padding: '14px 20px',
-                        display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+                        borderRadius: 12, padding: isMobile ? '12px 14px' : '14px 20px',
+                        display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16, flexWrap: 'wrap',
                         cursor: r.status !== 'Upcoming' ? 'pointer' : 'default',
                         transition: 'all 0.15s',
                       }}

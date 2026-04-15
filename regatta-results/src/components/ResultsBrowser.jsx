@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import StatusBadge from './StatusBadge';
 import { YEARS, PROVINCES, REGATTAS } from '../data/regattas';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 // Some years use non-standard slugs on regattaresults.co.za
 const YEAR_SLUGS = {
@@ -64,6 +65,7 @@ export default function ResultsBrowser() {
     return () => { cancelled = true; };
   }, [year]);
 
+  const isMobile = useIsMobile();
   const allRegattas = fetched ?? REGATTAS[year] ?? [];
   const regattas = allRegattas.filter(r =>
     (province === "All" || r.province === province) &&
@@ -76,23 +78,26 @@ export default function ResultsBrowser() {
   }
 
   return (
-    <div style={{ padding: "32px 24px", maxWidth: 1100, margin: "0 auto" }}>
-      <h2 style={{ fontFamily: "'Playfair Display', serif", color: "#f5f0e0", fontSize: "2.2rem", marginBottom: 8 }}>Results</h2>
-      <p style={{ color: "#6b7c6b", marginBottom: 32, fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: 1100, margin: '0 auto' }}>
+      <h2 style={{ fontFamily: "'Playfair Display', serif", color: '#f5f0e0', fontSize: isMobile ? '1.8rem' : '2.2rem', marginBottom: 8 }}>Results</h2>
+      <p style={{ color: '#6b7c6b', marginBottom: 24, fontFamily: "'DM Sans', sans-serif", fontSize: isMobile ? 14 : 16 }}>
         Browse South African rowing regattas by year. Click a race to view results.
       </p>
 
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 28, borderBottom: "1px solid #1a3a1a", paddingBottom: 16 }}>
-        {YEARS.map(y => (
-          <button key={y} onClick={() => changeYear(y)} style={{
-            background: year === y ? "#d4a017" : "transparent",
-            color: year === y ? "#030a03" : "#6b7c6b",
-            border: year === y ? "none" : "1px solid #1a3a1a",
-            borderRadius: 8, padding: "7px 18px", fontSize: 14,
-            fontWeight: year === y ? 700 : 500, cursor: "pointer",
-            fontFamily: "'DM Mono', monospace", transition: "all 0.15s"
-          }}>{y}</button>
-        ))}
+      {/* Year tabs — horizontally scrollable on mobile */}
+      <div style={{ overflowX: 'auto', marginBottom: 28, borderBottom: '1px solid #1a3a1a', paddingBottom: 16, WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ display: 'flex', gap: 6, width: 'max-content' }}>
+          {YEARS.map(y => (
+            <button key={y} onClick={() => changeYear(y)} style={{
+              background: year === y ? '#d4a017' : 'transparent',
+              color: year === y ? '#030a03' : '#6b7c6b',
+              border: year === y ? 'none' : '1px solid #1a3a1a',
+              borderRadius: 8, padding: '7px 18px', fontSize: 14,
+              fontWeight: year === y ? 700 : 500, cursor: 'pointer',
+              fontFamily: "'DM Mono', monospace", transition: 'all 0.15s', whiteSpace: 'nowrap',
+            }}>{y}</button>
+          ))}
+        </div>
       </div>
 
       {fetched === null && (
@@ -103,20 +108,20 @@ export default function ResultsBrowser() {
 
 {fetched !== null && (
         <>
-          <div style={{ display: "flex", gap: 12, marginBottom: 28, flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center' }}>
             <input
               value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Search regattas or venues…"
               style={{
-                background: "#0f220f", border: "1px solid #1a3a1a", borderRadius: 8,
-                padding: "10px 16px", color: "#e8e0c8", fontFamily: "'DM Sans', sans-serif",
-                fontSize: 14, flex: 1, minWidth: 200, outline: "none"
+                background: '#0f220f', border: '1px solid #1a3a1a', borderRadius: 8,
+                padding: '10px 16px', color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif",
+                fontSize: 14, flex: 1, outline: 'none',
               }}
             />
             <select value={province} onChange={e => setProvince(e.target.value)} style={{
-              background: "#0f220f", border: "1px solid #1a3a1a", borderRadius: 8,
-              padding: "10px 16px", color: "#e8e0c8", fontFamily: "'DM Sans', sans-serif",
-              fontSize: 14, cursor: "pointer", outline: "none"
+              background: '#0f220f', border: '1px solid #1a3a1a', borderRadius: 8,
+              padding: '10px 16px', color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif",
+              fontSize: 14, cursor: 'pointer', outline: 'none',
             }}>
               {PROVINCES.map(p => <option key={p}>{p}</option>)}
             </select>
