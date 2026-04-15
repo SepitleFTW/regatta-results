@@ -265,7 +265,7 @@ export default function HeroSection({ onBrowse }) {
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap');
         @keyframes wave { from { transform: scaleX(1) translateY(0); } to { transform: scaleX(1.02) translateY(3px); } }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #0a1a0a; }
+        html, body { background: #0a1a0a; overflow-x: hidden; width: 100%; }
         ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #0a1a0a; } ::-webkit-scrollbar-thumb { background: #1a3a1a; border-radius: 3px; }
       `}</style>
     </section>
