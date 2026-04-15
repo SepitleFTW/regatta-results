@@ -8,6 +8,42 @@ function Wave() {
   );
 }
 
+// Accurate South African flag SVG
+// Layer order: red bg, blue bg, white pall, green pall, gold pall, black triangle
+function SAFlag({ width = 120, style = {} }) {
+  const W = 300, H = 200;
+  const cx = 110; // convergence x (~1/3 of width)
+  const cy = H / 2;
+  const wH = 40; // white pall half-height at stem
+  const gH = 33; // green pall half-height at stem
+  const oH = 21; // gold pall half-height at stem
+
+  const pall = (h) =>
+    `0,0 0,${H} ${cx},${cy + h} ${W},${cy + h} ${W},${cy - h} ${cx},${cy - h}`;
+
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      width={width}
+      height={width * (H / W)}
+      style={{ display: 'block', ...style }}
+    >
+      {/* Red top half */}
+      <rect x={0} y={0} width={W} height={cy} fill="#DE3831" />
+      {/* Blue bottom half */}
+      <rect x={0} y={cy} width={W} height={cy} fill="#002395" />
+      {/* White pall */}
+      <polygon points={pall(wH)} fill="#FFFFFF" />
+      {/* Green pall */}
+      <polygon points={pall(gH)} fill="#007A4D" />
+      {/* Gold pall */}
+      <polygon points={pall(oH)} fill="#FFB612" />
+      {/* Black triangle */}
+      <polygon points={`0,0 0,${H} ${cx},${cy}`} fill="#000000" />
+    </svg>
+  );
+}
+
 export default function HeroSection({ onBrowse }) {
   return (
     <section style={{
@@ -15,6 +51,7 @@ export default function HeroSection({ onBrowse }) {
       minHeight: "100vh", display: "flex", flexDirection: "column",
       justifyContent: "center", alignItems: "center", position: "relative", overflow: "hidden"
     }}>
+      {/* Animated gold wave lines */}
       {[...Array(6)].map((_, i) => (
         <div key={i} style={{
           position: "absolute", left: 0, right: 0,
@@ -25,17 +62,37 @@ export default function HeroSection({ onBrowse }) {
         }} />
       ))}
 
+      {/* Large faint SA flag watermark — blends into the dark background */}
       <div style={{
-        position: "absolute", width: 500, height: 500,
+        position: "absolute", top: "50%", left: "50%",
+        transform: "translate(-50%, -50%)",
+        pointerEvents: "none",
+        opacity: 0.055,
+        filter: "blur(1.5px)",
+      }}>
+        <SAFlag width={600} />
+      </div>
+
+      {/* Soft radial glow centred on the flag */}
+      <div style={{
+        position: "absolute", width: 600, height: 400,
         borderRadius: "50%", top: "50%", left: "50%",
         transform: "translate(-50%,-50%)",
-        background: "radial-gradient(circle, rgba(212,160,23,0.07) 0%, transparent 70%)",
+        background: "radial-gradient(ellipse, rgba(212,160,23,0.07) 0%, transparent 70%)",
         pointerEvents: "none"
       }} />
 
       <div style={{ position: "relative", textAlign: "center", padding: "0 24px", maxWidth: 800 }}>
+        {/* Badge row — small flag + text + oar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 24 }}>
-          <OarIcon />
+          <div style={{
+            borderRadius: 4, overflow: "hidden",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.6)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            flexShrink: 0,
+          }}>
+            <SAFlag width={36} />
+          </div>
           <span style={{ color: "#d4a017", fontFamily: "'DM Mono', monospace", fontSize: 13, letterSpacing: "0.25em", textTransform: "uppercase" }}>
             South African Rowing
           </span>
@@ -63,7 +120,7 @@ export default function HeroSection({ onBrowse }) {
           lineHeight: 1.7, maxWidth: 560, margin: "0 auto 48px",
           fontFamily: "'DM Sans', sans-serif"
         }}>
-          The homes of South African competitive rowing results — from school regattas to national championships, all in one place.
+          The home of South African competitive rowing results — from school regattas to national championships, all in one place.
         </p>
 
         <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
