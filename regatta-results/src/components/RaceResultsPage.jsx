@@ -1,9 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import StatusBadge from './StatusBadge';
 import { toProxyUrl, parseEventList, parseEventResults } from '../utils/proxy';
 import { REGATTAS } from '../data/regattas';
 import { useIsMobile } from '../hooks/useIsMobile';
+
+function ShareButton({ title, text }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = useCallback(async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+      } catch (_) { /* user dismissed */ }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (_) {}
+  }, [title, text]);
+
+  return (
+    <button onClick={handleShare} style={{
+      background: copied ? 'rgba(74,222,128,0.12)' : 'rgba(212,160,23,0.08)',
+      border: `1px solid ${copied ? 'rgba(74,222,128,0.3)' : 'rgba(212,160,23,0.25)'}`,
+      color: copied ? '#4ade80' : '#d4a017',
+      borderRadius: 8, padding: '6px 14px', cursor: 'pointer',
+      fontFamily: "'DM Mono', monospace", fontSize: 12,
+      letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 6,
+      transition: 'all 0.2s', whiteSpace: 'nowrap', flexShrink: 0,
+    }}>
+      {copied ? '✓ Copied' : '↗ Share'}
+    </button>
+  );
+}
 
 const PLACE_MEDAL = { '1': '#d4a017', '2': '#9ca3af', '3': '#a0522d' };
 
@@ -106,12 +139,20 @@ export default function RaceResultsPage() {
       </button>
 
       <div style={{ marginBottom: 32 }}>
-        <h2 style={{
-          fontFamily: "'Playfair Display', serif", color: '#f5f0e0',
-          fontSize: 'clamp(1.4rem, 4vw, 2.2rem)', margin: '0 0 10px',
-        }}>
-          {selectedEvent ? selectedEvent.eventName : race.name}
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+          <h2 style={{
+            fontFamily: "'Playfair Display', serif", color: '#f5f0e0',
+            fontSize: 'clamp(1.4rem, 4vw, 2.2rem)', margin: '0 0 10px', flex: 1,
+          }}>
+            {selectedEvent ? selectedEvent.eventName : race.name}
+          </h2>
+          <ShareButton
+            title={selectedEvent ? selectedEvent.eventName : race.name}
+            text={selectedEvent
+              ? `${selectedEvent.eventName} — ${race.name} (${race.date})`
+              : `${race.name} results — ${race.date}, ${race.location}`}
+          />
+        </div>
         {selectedEvent && (
           <p style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 13, margin: '0 0 10px' }}>
             {raceLabel}
