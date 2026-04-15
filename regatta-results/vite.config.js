@@ -1,9 +1,63 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg', 'icon-192.svg', 'icon-512.svg'],
+      manifest: {
+        name: 'Regatta Results SA',
+        short_name: 'Regatta SA',
+        description: 'South African rowing regatta results, calendar and athlete search',
+        theme_color: '#0a1a0a',
+        background_color: '#0a1a0a',
+        display: 'standalone',
+        orientation: 'portrait',
+        scope: '/',
+        start_url: '/',
+        icons: [
+          {
+            src: '/icon-192.svg',
+            sizes: '192x192',
+            type: 'image/svg+xml',
+            purpose: 'any',
+          },
+          {
+            src: '/icon-512.svg',
+            sizes: '512x512',
+            type: 'image/svg+xml',
+            purpose: 'any maskable',
+          },
+        ],
+      },
+      workbox: {
+        // Cache the app shell and static assets
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // Don't cache proxy/api calls
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/rr-proxy/, /^\/api/],
+        runtimeCaching: [
+          {
+            // Cache Google Fonts
+            urlPattern: /^https:\/\/fonts\.googleapis\.com/,
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'google-fonts-stylesheets' },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts',
+              expiration: { maxAgeSeconds: 60 * 60 * 24 * 365 },
+            },
+          },
+        ],
+      },
+    }),
+  ],
   server: {
     proxy: {
       '/rr-proxy': {

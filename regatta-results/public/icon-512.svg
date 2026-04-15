@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#0a1a0a"/>
+  <!-- Subtle radial glow -->
+  <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#1a3a1a" stop-opacity="1"/>
+    <stop offset="100%" stop-color="#0a1a0a" stop-opacity="1"/>
+  </radialGradient>
+  <rect width="512" height="512" rx="96" fill="url(#glow)"/>
+
+  <!-- Oar blade (top-left) -->
+  <ellipse cx="168" cy="148" rx="38" ry="22" fill="#d4a017" transform="rotate(-40 168 148)"/>
+  <!-- Oar shaft -->
+  <rect x="248" y="130" width="14" height="200" rx="7" fill="#d4a017" transform="rotate(-40 255 230)"/>
+  <!-- Oar handle end -->
+  <ellipse cx="342" cy="312" rx="12" ry="8" fill="#d4a017" transform="rotate(-40 342 312)"/>
+
+  <!-- "RR" initials -->
+  <text x="256" y="400" font-family="Georgia, serif" font-size="96" font-weight="900"
+        fill="#d4a017" text-anchor="middle" letter-spacing="-4">SA</text>
+
+  <!-- Thin gold border -->
+  <rect width="512" height="512" rx="96" fill="none" stroke="#d4a017" stroke-width="6" stroke-opacity="0.3"/>
+</svg>
