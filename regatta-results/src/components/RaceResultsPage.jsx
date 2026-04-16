@@ -448,7 +448,7 @@ export default function RaceResultsPage() {
           </div>
         ) : entries ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {/* Pre-race entries banner */}
+            {/* Lane draw banner */}
             <div style={{
               background: 'linear-gradient(135deg, #0a1a14, #0f220f)',
               border: '1px solid #1a3a2a', borderLeft: '3px solid #4ade80',
@@ -459,9 +459,25 @@ export default function RaceResultsPage() {
                 Lane Draw
               </span>
               <span style={{ color: '#6b7c6b', fontFamily: "'DM Sans', sans-serif", fontSize: 13 }}>
-                Results not yet posted — showing race entries
+                Results not yet posted
               </span>
             </div>
+            {/* Progression rules */}
+            {selectedEvent.progression && selectedEvent.progression.toLowerCase() !== 'final only' && (
+              <div style={{
+                background: 'linear-gradient(135deg, #0f1e0a, #0a1a14)',
+                border: '1px solid #1a3a2a', borderLeft: '3px solid #d4a017',
+                borderRadius: 10, padding: '10px 16px',
+                display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4,
+              }}>
+                <span style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', flexShrink: 0 }}>
+                  Progression
+                </span>
+                <span style={{ color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif", fontSize: 13 }}>
+                  {selectedEvent.progression}
+                </span>
+              </div>
+            )}
             {entries.map((entry, i) => (
               <div key={i} style={{
                 background: 'linear-gradient(145deg, #0f220f, #0a1a0a)',
