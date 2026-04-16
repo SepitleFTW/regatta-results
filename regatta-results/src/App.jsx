@@ -11,6 +11,7 @@ import RegattaCalendar from './components/RegattaCalendar';
 import CourseRecords from './components/CourseRecords';
 import ChampionshipPoints from './components/ChampionshipPoints';
 import HallOfFame from './components/HallOfFame';
+import DonateSection from './components/DonateSection';
 import Footer from './components/Footer';
 
 const NAV_LINKS = [
@@ -33,6 +34,17 @@ export default function App() {
   function handleNavClick(path) {
     navigate(path);
     setMenuOpen(false);
+  }
+
+  function handleDonateClick(e) {
+    e.preventDefault();
+    setMenuOpen(false);
+    if (!isHome) {
+      navigate('/');
+      setTimeout(() => document.getElementById('donate')?.scrollIntoView({ behavior: 'smooth' }), 100);
+    } else {
+      document.getElementById('donate')?.scrollIntoView({ behavior: 'smooth' });
+    }
   }
 
   return (
@@ -81,6 +93,12 @@ export default function App() {
                 }}>{label}</button>
               );
             })}
+            <a href="#donate" onClick={handleDonateClick} style={{
+              background: 'rgba(212,160,23,0.12)', border: '1px solid rgba(212,160,23,0.3)',
+              color: '#d4a017', borderRadius: 8, padding: '6px 16px',
+              fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600,
+              textDecoration: 'none', cursor: 'pointer', marginLeft: 4,
+            }}>Donate</a>
           </div>
         )}
       </nav>
@@ -105,12 +123,24 @@ export default function App() {
               }}>{label}</button>
             );
           })}
+          <a href="#donate" onClick={handleDonateClick} style={{
+            background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.3)',
+            color: '#d4a017', borderRadius: 8, padding: '12px 16px',
+            fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 600,
+            textDecoration: 'none', cursor: 'pointer', marginTop: 4, display: 'block',
+            textAlign: 'center',
+          }}>Donate</a>
         </div>
       )}
 
       <div style={{ paddingTop: isHome ? 0 : 60 }}>
         <Routes>
-          <Route path="/" element={<HeroSection onBrowse={() => navigate('/results')} />} />
+          <Route path="/" element={
+            <>
+              <HeroSection onBrowse={() => navigate('/results')} />
+              <DonateSection />
+            </>
+          } />
           <Route path="/results" element={<ResultsBrowser />} />
           <Route path="/results/:raceId" element={<RaceResultsPage />} />
           <Route path="/search" element={<AthleteSearch />} />
