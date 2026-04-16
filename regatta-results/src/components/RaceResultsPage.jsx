@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import StatusBadge from './StatusBadge';
-import { toProxyUrl, parseEventList, parseEventResults } from '../utils/proxy';
+import { toProxyUrl, parseEventList, parseEventResults, parseEntryList } from '../utils/proxy';
 import { REGATTAS } from '../data/regattas';
 import { useIsMobile } from '../hooks/useIsMobile';
 
@@ -62,6 +62,7 @@ export default function RaceResultsPage() {
   const [error, setError] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [results, setResults] = useState(null);
+  const [entries, setEntries] = useState(null);
   const [resultsLoading, setResultsLoading] = useState(false);
   const [resultsError, setResultsError] = useState(null);
 
@@ -91,12 +92,21 @@ export default function RaceResultsPage() {
   function openEvent(ev) {
     setSelectedEvent(ev);
     setResults(null);
+    setEntries(null);
     setResultsError(null);
     setResultsLoading(true);
     window.scrollTo(0, 0);
     fetch(ev.detailsUrl)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
-      .then(html => setResults(parseEventResults(html)))
+      .then(html => {
+        const res = parseEventResults(html);
+        if (res.length > 0) {
+          setResults(res);
+        } else {
+          const ents = parseEntryList(html);
+          setEntries(ents.length > 0 ? ents : null);
+        }
+      })
       .catch(e => setResultsError(e.message))
       .finally(() => setResultsLoading(false));
   }
@@ -257,6 +267,56 @@ export default function RaceResultsPage() {
             padding: 24, color: '#f87171', fontFamily: "'DM Sans', sans-serif",
           }}>
             Could not load results: {resultsError}
+          </div>
+        ) : entries ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {/* Pre-race entries banner */}
+            <div style={{
+              background: 'linear-gradient(135deg, #0a1a14, #0f220f)',
+              border: '1px solid #1a3a2a', borderLeft: '3px solid #4ade80',
+              borderRadius: 10, padding: '10px 16px',
+              display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4,
+            }}>
+              <span style={{ color: '#4ade80', fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', flexShrink: 0 }}>
+                Lane Draw
+              </span>
+              <span style={{ color: '#6b7c6b', fontFamily: "'DM Sans', sans-serif", fontSize: 13 }}>
+                Results not yet posted — showing race entries
+              </span>
+            </div>
+            {entries.map((entry, i) => (
+              <div key={i} style={{
+                background: 'linear-gradient(145deg, #0f220f, #0a1a0a)',
+                border: '1px solid #1a3a1a', borderRadius: 10,
+                padding: isMobile ? '12px 14px' : '14px 18px',
+                display: 'flex', alignItems: 'flex-start', gap: 14,
+              }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                  background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.3)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 12, fontWeight: 700,
+                }}>
+                  {entry.lane}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    color: '#f5f0e0', fontFamily: "'DM Sans', sans-serif",
+                    fontSize: isMobile ? 13 : 14, fontWeight: 600, marginBottom: 3,
+                  }}>
+                    {entry.org}
+                  </div>
+                  {entry.athletes && (
+                    <div style={{
+                      color: '#4a6b4a', fontFamily: "'DM Sans', sans-serif",
+                      fontSize: 12, lineHeight: 1.5,
+                    }}>
+                      {entry.athletes}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         ) : results ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

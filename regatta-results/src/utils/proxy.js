@@ -43,3 +43,19 @@ export function parseEventResults(html) {
     })
     .filter(r => r.place && r.org);
 }
+
+export function parseEntryList(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return [...doc.querySelectorAll('table tr')]
+    .filter(r => r.querySelectorAll('td').length >= 3)
+    .map(row => {
+      const cells = [...row.querySelectorAll('td')];
+      return {
+        lane: cells[0]?.textContent.trim(),
+        boat: cells[1]?.textContent.trim(),
+        org: cells[2]?.textContent.trim(),
+        athletes: cells[3]?.textContent.trim() || '',
+      };
+    })
+    .filter(r => r.lane && /^\d+$/.test(r.lane) && r.org);
+}
