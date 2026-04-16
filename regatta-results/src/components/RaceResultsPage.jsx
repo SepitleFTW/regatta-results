@@ -215,42 +215,70 @@ export default function RaceResultsPage() {
             }}>
               {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {filteredEvents.map((ev, i) => (
-                <button key={i} onClick={() => openEvent(ev)} style={{
-                  background: 'linear-gradient(145deg, #0f220f, #0a1a0a)',
-                  border: '1px solid #1a3a1a', borderRadius: 10,
-                  padding: '14px 18px', cursor: 'pointer', textAlign: 'left',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  gap: 16, width: '100%', transition: 'all 0.15s',
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#d4a017'; e.currentTarget.style.background = 'linear-gradient(145deg, #122612, #0d1d0d)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#1a3a1a'; e.currentTarget.style.background = 'linear-gradient(145deg, #0f220f, #0a1a0a)'; }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
-                    <span style={{ color: '#2d5a1b', fontFamily: "'DM Mono', monospace", fontSize: 11, flexShrink: 0 }}>
-                      #{ev.eventId}
-                    </span>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{
-                        color: '#f5f0e0', fontFamily: "'Playfair Display', serif",
-                        fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                      }}>
-                        {ev.eventName}
+            {(() => {
+              // Group by day if multiple days present
+              const days = [...new Set(filteredEvents.map(e => e.date).filter(Boolean))];
+              const grouped = days.length > 1
+                ? days.map(d => ({ day: d, events: filteredEvents.filter(e => e.date === d) }))
+                : [{ day: null, events: filteredEvents }];
+              return grouped.map(({ day, events }) => (
+                <div key={day || 'all'} style={{ marginBottom: 20 }}>
+                  {day && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                      <div style={{ background: '#0f220f', border: '1px solid #1a3a1a', borderRadius: 8, padding: '4px 14px', flexShrink: 0 }}>
+                        <span style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 12, fontWeight: 700 }}>{day}</span>
                       </div>
-                      <div style={{ color: '#6b7c6b', fontFamily: "'DM Sans', sans-serif", fontSize: 12, marginTop: 2 }}>
-                        {ev.race}
-                      </div>
+                      <div style={{ flex: 1, height: 1, background: '#1a3a1a' }} />
                     </div>
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {events.map((ev, i) => {
+                      const clickable = !!ev.detailsUrl;
+                      return (
+                        <div key={i}
+                          onClick={() => clickable && openEvent(ev)}
+                          style={{
+                            background: 'linear-gradient(145deg, #0f220f, #0a1a0a)',
+                            border: '1px solid #1a3a1a', borderRadius: 10,
+                            padding: '14px 18px', cursor: clickable ? 'pointer' : 'default',
+                            textAlign: 'left', display: 'flex', alignItems: 'center',
+                            justifyContent: 'space-between', gap: 16,
+                            opacity: clickable ? 1 : 0.5, transition: 'all 0.15s',
+                          }}
+                          onMouseEnter={e => { if (clickable) { e.currentTarget.style.borderColor = '#d4a017'; e.currentTarget.style.background = 'linear-gradient(145deg, #122612, #0d1d0d)'; } }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = '#1a3a1a'; e.currentTarget.style.background = 'linear-gradient(145deg, #0f220f, #0a1a0a)'; }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
+                            <span style={{ color: '#2d5a1b', fontFamily: "'DM Mono', monospace", fontSize: 11, flexShrink: 0 }}>
+                              #{ev.eventId}
+                            </span>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{
+                                color: '#f5f0e0', fontFamily: "'Playfair Display', serif",
+                                fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                              }}>
+                                {ev.eventName}
+                              </div>
+                              <div style={{ color: '#6b7c6b', fontFamily: "'DM Sans', sans-serif", fontSize: 12, marginTop: 2 }}>
+                                {ev.race}
+                              </div>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flexShrink: 0 }}>
+                            {!isMobile && <span style={{ color: '#6b7c6b', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>{ev.time}</span>}
+                            <StatusBadge status={ev.status === 'Official' ? 'Official' : 'Scheduled'} />
+                            {clickable
+                              ? <span style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 13 }}>→</span>
+                              : <span style={{ color: '#2d5a1b', fontFamily: "'DM Mono', monospace", fontSize: 10 }}>TBA</span>
+                            }
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flexShrink: 0 }}>
-                    {!isMobile && <span style={{ color: '#6b7c6b', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>{ev.time}</span>}
-                    <StatusBadge status={ev.status === 'Official' ? 'Official' : 'Scheduled'} />
-                    <span style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 13 }}>→</span>
-                  </div>
-                </button>
-              ))}
-            </div>
+                </div>
+              ));
+            })()}
           </div>
         )
       )}

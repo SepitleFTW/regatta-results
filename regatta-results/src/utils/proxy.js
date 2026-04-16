@@ -16,13 +16,14 @@ export function parseEventList(html, proxyUrl) {
         eventId: cells[0]?.textContent.trim(),
         eventName: cells[1]?.textContent.trim(),
         race: cells[2]?.textContent.trim(),
+        date: cells[3]?.textContent.trim() || '',
         time: cells[4]?.textContent.trim(),
         status: cells[5]?.textContent.trim(),
         progression: cells[6]?.textContent.trim() || '',
         detailsUrl: href ? baseDir + href : null,
       };
     })
-    .filter(r => r.eventName && r.detailsUrl);
+    .filter(r => r.eventName && !r.eventName.toUpperCase().includes('BREAK'));
 }
 
 export function parseEventResults(html) {
