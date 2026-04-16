@@ -4,6 +4,7 @@ import StatusBadge from './StatusBadge';
 import { toProxyUrl, parseEventList, parseEventResults, parseEntryList } from '../utils/proxy';
 import { REGATTAS } from '../data/regattas';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { addWatched, removeWatched, isWatched } from '../hooks/useResultsAlerts';
 
 function ShareButton({ title, text }) {
   const [copied, setCopied] = useState(false);
@@ -34,6 +35,37 @@ function ShareButton({ title, text }) {
       transition: 'all 0.2s', whiteSpace: 'nowrap', flexShrink: 0,
     }}>
       {copied ? '✓ Copied' : '↗ Share'}
+    </button>
+  );
+}
+
+function WatchButton({ race }) {
+  const [watched, setWatched] = useState(() => isWatched(race.id));
+
+  function toggle() {
+    if (watched) {
+      removeWatched(race.id);
+      setWatched(false);
+    } else {
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+      addWatched(race);
+      setWatched(true);
+    }
+  }
+
+  return (
+    <button onClick={toggle} style={{
+      background: watched ? 'rgba(74,222,128,0.1)' : 'rgba(212,160,23,0.08)',
+      border: `1px solid ${watched ? 'rgba(74,222,128,0.3)' : 'rgba(212,160,23,0.25)'}`,
+      color: watched ? '#4ade80' : '#d4a017',
+      borderRadius: 8, padding: '6px 14px', cursor: 'pointer',
+      fontFamily: "'DM Mono', monospace", fontSize: 12,
+      letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 6,
+      transition: 'all 0.2s', whiteSpace: 'nowrap', flexShrink: 0,
+    }}>
+      {watched ? '🔔 Watching' : '🔔 Notify me'}
     </button>
   );
 }
@@ -164,12 +196,17 @@ export default function RaceResultsPage() {
           }}>
             {selectedEvent ? selectedEvent.eventName : race.name}
           </h2>
-          <ShareButton
-            title={selectedEvent ? selectedEvent.eventName : race.name}
-            text={selectedEvent
-              ? `${selectedEvent.eventName} — ${race.name} (${race.date})`
-              : `${race.name} results — ${race.date}, ${race.location}`}
-          />
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            {race.status === 'Upcoming' && !selectedEvent && (
+              <WatchButton race={race} />
+            )}
+            <ShareButton
+              title={selectedEvent ? selectedEvent.eventName : race.name}
+              text={selectedEvent
+                ? `${selectedEvent.eventName} — ${race.name} (${race.date})`
+                : `${race.name} results — ${race.date}, ${race.location}`}
+            />
+          </div>
         </div>
         {selectedEvent && (
           <p style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 13, margin: '0 0 10px' }}>

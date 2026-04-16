@@ -3,6 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { REGATTAS } from '../data/regattas';
 import StatusBadge from './StatusBadge';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useWeather } from '../hooks/useWeather';
+
+function WeatherBadge({ location }) {
+  const weather = useWeather(location);
+  if (!weather) return null;
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 4,
+      color: '#6b7c6b', fontFamily: "'DM Mono', monospace", fontSize: 11,
+      background: '#0a1a0a', border: '1px solid #1a3a1a', borderRadius: 6,
+      padding: '3px 8px', flexShrink: 0, whiteSpace: 'nowrap',
+    }}>
+      <span>{weather.icon}</span>
+      <span style={{ color: '#e8e0c8' }}>{weather.temp}°</span>
+      <span>·</span>
+      <span>{weather.windKph}km/h {weather.windDir}</span>
+    </div>
+  );
+}
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTH_SHORT = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
@@ -112,16 +131,16 @@ export default function RegattaCalendar() {
                   return (
                     <div
                       key={r.id}
-                      onClick={() => r.status !== 'Upcoming' && navigate(`/results/${r.id}`, { state: { race: r } })}
+                      onClick={() => navigate(`/results/${r.id}`, { state: { race: r } })}
                       style={{
                         background: isUpcoming ? 'linear-gradient(145deg, #122612, #0f220f)' : 'linear-gradient(145deg, #0f220f, #0a1a0a)',
                         border: `1px solid ${isUpcoming ? '#1e4a1e' : '#1a3a1a'}`,
                         borderRadius: 12, padding: isMobile ? '12px 14px' : '14px 20px',
                         display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16, flexWrap: 'wrap',
-                        cursor: r.status !== 'Upcoming' ? 'pointer' : 'default',
+                        cursor: 'pointer',
                         transition: 'all 0.15s',
                       }}
-                      onMouseEnter={e => { if (r.status !== 'Upcoming') { e.currentTarget.style.borderColor = '#d4a017'; e.currentTarget.style.transform = 'translateX(4px)'; } }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#d4a017'; e.currentTarget.style.transform = 'translateX(4px)'; }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = isUpcoming ? '#1e4a1e' : '#1a3a1a'; e.currentTarget.style.transform = ''; }}
                     >
                       {/* Date badge */}
@@ -147,11 +166,10 @@ export default function RegattaCalendar() {
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        {isUpcoming && r.location && <WeatherBadge location={r.location} />}
                         <StatusBadge status={r.status} />
-                        {r.status !== 'Upcoming' && (
-                          <span style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 13 }}>→</span>
-                        )}
+                        <span style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 13 }}>→</span>
                       </div>
                     </div>
                   );

@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { useIsMobile } from './hooks/useIsMobile';
+import { useResultsAlerts } from './hooks/useResultsAlerts';
 import OarIcon from './components/OarIcon';
 import HeroSection from './components/HeroSection';
 import ResultsBrowser from './components/ResultsBrowser';
 import RaceResultsPage from './components/RaceResultsPage';
 import AthleteSearch from './components/AthleteSearch';
+import AthleteProfile from './components/AthleteProfile';
 import RegattaCalendar from './components/RegattaCalendar';
 import CourseRecords from './components/CourseRecords';
 import ChampionshipPoints from './components/ChampionshipPoints';
@@ -28,6 +30,7 @@ export default function App() {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { alerts, dismiss } = useResultsAlerts();
 
   const isHome = location.pathname === '/';
 
@@ -133,6 +136,40 @@ export default function App() {
         </div>
       )}
 
+      {/* Results-live alerts banner */}
+      {alerts.length > 0 && (
+        <div style={{
+          position: 'fixed', top: 60, left: 0, right: 0, zIndex: 98,
+          padding: '6px 16px', display: 'flex', flexDirection: 'column', gap: 4,
+          pointerEvents: 'none',
+        }}>
+          {alerts.map(a => (
+            <div key={a.id} style={{
+              background: 'linear-gradient(135deg, #0a1a14, #0f220f)',
+              border: '1px solid rgba(74,222,128,0.5)',
+              borderRadius: 10, padding: '10px 16px',
+              display: 'flex', alignItems: 'center', gap: 12,
+              pointerEvents: 'all',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+            }}>
+              <span style={{ color: '#4ade80', fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', flexShrink: 0 }}>
+                Results Live
+              </span>
+              <span style={{ flex: 1, color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif", fontSize: 14 }}>{a.name}</span>
+              <button onClick={() => navigate(`/results/${a.id}`)} style={{
+                background: '#4ade80', color: '#030a03', border: 'none', borderRadius: 6,
+                padding: '4px 14px', cursor: 'pointer',
+                fontFamily: "'DM Mono', monospace", fontSize: 11, fontWeight: 700,
+              }}>View →</button>
+              <button onClick={() => dismiss(a.id)} style={{
+                background: 'none', border: 'none', color: '#4a6b4a',
+                cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: '0 4px',
+              }}>✕</button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div style={{ paddingTop: isHome ? 0 : 60 }}>
         <Routes>
           <Route path="/" element={
@@ -144,6 +181,7 @@ export default function App() {
           <Route path="/results" element={<ResultsBrowser />} />
           <Route path="/results/:raceId" element={<RaceResultsPage />} />
           <Route path="/search" element={<AthleteSearch />} />
+          <Route path="/athlete/:name" element={<AthleteProfile />} />
           <Route path="/calendar" element={<RegattaCalendar />} />
           <Route path="/records" element={<CourseRecords />} />
           <Route path="/standings" element={<ChampionshipPoints />} />

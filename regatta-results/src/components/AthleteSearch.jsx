@@ -235,9 +235,19 @@ export default function AthleteSearch() {
                         {isFinished ? row.place : '–'}
                       </div>
                       <div style={{ flex: 1, minWidth: 120 }}>
-                        <div style={{ color: '#f5f0e0', fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600 }}>
-                          {row.athlete || '—'}
-                        </div>
+                        {row.athlete ? (
+                          <button
+                            onClick={e => { e.stopPropagation(); navigate(`/athlete/${encodeURIComponent(row.athlete)}`); }}
+                            style={{
+                              background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                              color: '#f5f0e0', fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600,
+                              textAlign: 'left', textDecoration: 'underline', textDecorationColor: 'rgba(212,160,23,0.4)',
+                              textUnderlineOffset: 3,
+                            }}
+                          >{row.athlete}</button>
+                        ) : (
+                          <div style={{ color: '#4a6b4a', fontFamily: "'DM Sans', sans-serif", fontSize: 14 }}>—</div>
+                        )}
                         <div style={{ color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 11 }}>
                           {row.org}
                         </div>

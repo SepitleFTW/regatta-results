@@ -42,16 +42,71 @@ function TrendBadge({ current, previous }) {
   );
 }
 
+function HeadToHeadChart({ sA, sB, years, width = 480, height = 180 }) {
+  if (!sA || !sB || years.length < 2) return null;
+
+  const PAD = { top: 16, right: 16, bottom: 28, left: 36 };
+  const W = width - PAD.left - PAD.right;
+  const H = height - PAD.top - PAD.bottom;
+
+  const allVals = years.flatMap(y => [sA.points[y] || 0, sB.points[y] || 0]);
+  const max = Math.max(...allVals, 1);
+
+  const px = i => PAD.left + (i / Math.max(years.length - 1, 1)) * W;
+  const py = v => PAD.top + H - ((v / max) * H);
+
+  const ptsA = years.map((y, i) => `${px(i)},${py(sA.points[y] || 0)}`).join(' ');
+  const ptsB = years.map((y, i) => `${px(i)},${py(sB.points[y] || 0)}`).join(' ');
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxWidth: width, display: 'block' }}>
+      {/* Gridlines */}
+      {[0.25, 0.5, 0.75, 1].map(frac => {
+        const y = PAD.top + H - frac * H;
+        return (
+          <g key={frac}>
+            <line x1={PAD.left} y1={y} x2={PAD.left + W} y2={y} stroke="#1a3a1a" strokeWidth="1" />
+            <text x={PAD.left - 4} y={y + 4} textAnchor="end" fontSize="9" fill="#4a6b4a">
+              {Math.round(max * frac)}
+            </text>
+          </g>
+        );
+      })}
+      {/* School A (gold) */}
+      <polyline points={ptsA} fill="none" stroke="#d4a017" strokeWidth="2.5" strokeLinejoin="round" />
+      {years.map((y, i) => (
+        <circle key={`a${y}`} cx={px(i)} cy={py(sA.points[y] || 0)} r="3.5" fill="#d4a017" />
+      ))}
+      {/* School B (green) */}
+      <polyline points={ptsB} fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinejoin="round" />
+      {years.map((y, i) => (
+        <circle key={`b${y}`} cx={px(i)} cy={py(sB.points[y] || 0)} r="3.5" fill="#4ade80" />
+      ))}
+      {/* X-axis labels */}
+      {years.map((y, i) => (
+        <text key={y} x={px(i)} y={height - 6} textAnchor="middle" fontSize="9" fill="#4a6b4a">{y}</text>
+      ))}
+    </svg>
+  );
+}
+
 export default function ChampionshipPoints() {
   const isMobile = useIsMobile();
   const [category, setCategory] = useState('boys');
   const [year, setYear] = useState(2025);
+  const [compareMode, setCompareMode] = useState(false);
+  const [schoolA, setSchoolA] = useState('');
+  const [schoolB, setSchoolB] = useState('');
 
   const schools = CHAMP_DATA[category];
   const availYears = CHAMP_YEARS.filter(y =>
     schools.some(s => s.points[y] != null && s.points[y] > 0)
   );
   const prevYear = availYears[availYears.indexOf(year) - 1];
+
+  const schoolNames = schools.map(s => s.school).sort();
+  const dataA = schools.find(s => s.school === schoolA);
+  const dataB = schools.find(s => s.school === schoolB);
 
   const ranked = [...schools]
     .map(s => ({ ...s, pts: s.points[year] ?? 0 }))
@@ -76,9 +131,9 @@ export default function ChampionshipPoints() {
       </div>
 
       {/* Category tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
         {CATEGORIES.map(({ key, label }) => (
-          <button key={key} onClick={() => { setCategory(key); setYear(availYears[availYears.length - 1] || 2025); }} style={{
+          <button key={key} onClick={() => { setCategory(key); setYear(availYears[availYears.length - 1] || 2025); setSchoolA(''); setSchoolB(''); }} style={{
             background: category === key ? '#d4a017' : '#0f220f',
             color: category === key ? '#030a03' : '#6b7c6b',
             border: category === key ? 'none' : '1px solid #1a3a1a',
@@ -86,7 +141,68 @@ export default function ChampionshipPoints() {
             cursor: 'pointer', fontFamily: "'DM Mono', monospace", transition: 'all 0.15s',
           }}>{label}</button>
         ))}
+        <div style={{ flex: 1 }} />
+        <button onClick={() => setCompareMode(m => !m)} style={{
+          background: compareMode ? 'rgba(74,222,128,0.1)' : '#0f220f',
+          color: compareMode ? '#4ade80' : '#6b7c6b',
+          border: `1px solid ${compareMode ? 'rgba(74,222,128,0.4)' : '#1a3a1a'}`,
+          borderRadius: 8, padding: '7px 16px', fontSize: 12, fontWeight: 700,
+          cursor: 'pointer', fontFamily: "'DM Mono', monospace", transition: 'all 0.15s',
+          letterSpacing: '0.08em',
+        }}>⚔ Compare</button>
       </div>
+
+      {/* Head-to-head compare view */}
+      {compareMode && (
+        <div style={{ background: '#0f220f', border: '1px solid #1e4a1e', borderRadius: 16, padding: isMobile ? 16 : 24, marginBottom: 28 }}>
+          <p style={{ color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
+            Head-to-Head Comparison
+          </p>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexDirection: isMobile ? 'column' : 'row' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 11, display: 'block', marginBottom: 6 }}>School A</label>
+              <select value={schoolA} onChange={e => setSchoolA(e.target.value)} style={{
+                background: '#0a1a0a', border: '1px solid #d4a01740', borderRadius: 8,
+                padding: '8px 12px', color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif",
+                fontSize: 14, width: '100%', outline: 'none', cursor: 'pointer',
+              }}>
+                <option value="">Select school…</option>
+                {schoolNames.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ color: '#4ade80', fontFamily: "'DM Mono', monospace", fontSize: 11, display: 'block', marginBottom: 6 }}>School B</label>
+              <select value={schoolB} onChange={e => setSchoolB(e.target.value)} style={{
+                background: '#0a1a0a', border: '1px solid #4ade8040', borderRadius: 8,
+                padding: '8px 12px', color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif",
+                fontSize: 14, width: '100%', outline: 'none', cursor: 'pointer',
+              }}>
+                <option value="">Select school…</option>
+                {schoolNames.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {dataA && dataB ? (
+            <div>
+              {/* Legend */}
+              <div style={{ display: 'flex', gap: 20, marginBottom: 12 }}>
+                <span style={{ color: '#d4a017', fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600 }}>
+                  ● {schoolA} — {dataA.points[year] ?? 0} pts ({year})
+                </span>
+                <span style={{ color: '#4ade80', fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600 }}>
+                  ● {schoolB} — {dataB.points[year] ?? 0} pts ({year})
+                </span>
+              </div>
+              <HeadToHeadChart sA={dataA} sB={dataB} years={availYears} />
+            </div>
+          ) : (
+            <p style={{ color: '#2d5a1b', fontFamily: "'DM Sans', sans-serif", fontSize: 14, textAlign: 'center', padding: '24px 0' }}>
+              Select two schools above to compare their performance over time.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Year tabs — scrollable */}
       <div style={{ overflowX: 'auto', marginBottom: 28, WebkitOverflowScrolling: 'touch' }}>
