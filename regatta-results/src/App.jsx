@@ -10,6 +10,7 @@ import AthleteSearch from './components/AthleteSearch';
 import RegattaCalendar from './components/RegattaCalendar';
 import CourseRecords from './components/CourseRecords';
 import ChampionshipPoints from './components/ChampionshipPoints';
+import HallOfFame from './components/HallOfFame';
 import DonateSection from './components/DonateSection';
 import Footer from './components/Footer';
 
@@ -19,6 +20,7 @@ const NAV_LINKS = [
   { label: 'Calendar', path: '/calendar' },
   { label: 'Records', path: '/records' },
   { label: 'Standings', path: '/standings' },
+  { label: 'Hall of Fame', path: '/halloffame' },
 ];
 
 export default function App() {
@@ -145,6 +147,7 @@ export default function App() {
           <Route path="/calendar" element={<RegattaCalendar />} />
           <Route path="/records" element={<CourseRecords />} />
           <Route path="/standings" element={<ChampionshipPoints />} />
+          <Route path="/halloffame" element={<HallOfFame />} />
         </Routes>
       </div>
 
