@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import StatusBadge from './StatusBadge';
 import { toProxyUrl, parseEventList, parseEventResults, parseEntryList } from '../utils/proxy';
@@ -98,6 +98,10 @@ export default function RaceResultsPage() {
   const [entries, setEntries] = useState(null);
   const [resultsLoading, setResultsLoading] = useState(false);
   const [resultsError, setResultsError] = useState(null);
+  const [newEventIds, setNewEventIds] = useState(new Set());
+  const [lastPoll, setLastPoll] = useState(null);
+  const [tick, setTick] = useState(0); // forces "X sec ago" to update
+  const prevEventsRef = useRef(null);
 
   const days = [...new Set(events.map(e => e.date).filter(Boolean))];
   const activeDay = days.length > 1 ? (selectedDay || days[0]) : null;
@@ -120,6 +124,7 @@ export default function RaceResultsPage() {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    prevEventsRef.current = null;
     const proxyUrl = toProxyUrl(race.url);
     fetch(proxyUrl)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
@@ -128,6 +133,59 @@ export default function RaceResultsPage() {
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [race?.url]);
+
+  // Seed prevEventsRef once events first load
+  useEffect(() => {
+    if (events.length > 0 && prevEventsRef.current === null) {
+      prevEventsRef.current = events;
+    }
+  }, [events]);
+
+  // isLive: regatta has started but has unfinished events
+  const isLive = !loading && !error && events.length > 0 &&
+    events.some(e => e.status !== 'Official');
+
+  // Auto-refresh every 60s while live
+  useEffect(() => {
+    if (!isLive || !race) return;
+    const poll = () => {
+      const proxyUrl = toProxyUrl(race.url);
+      fetch(proxyUrl)
+        .then(r => r.ok ? r.text() : null)
+        .then(html => {
+          if (!html) return;
+          const updated = parseEventList(html, proxyUrl);
+          const prev = prevEventsRef.current || [];
+          const prevMap = new Map(prev.map(e => [e.eventId, e.status]));
+
+          const fresh = new Set();
+          for (const ev of updated) {
+            const was = prevMap.get(ev.eventId);
+            if (was === undefined || (was !== 'Official' && ev.status === 'Official')) {
+              fresh.add(ev.eventId);
+            }
+          }
+
+          prevEventsRef.current = updated;
+          setEvents(updated);
+          setLastPoll(new Date());
+          if (fresh.size > 0) {
+            setNewEventIds(fresh);
+            setTimeout(() => setNewEventIds(new Set()), 10000);
+          }
+        })
+        .catch(() => {});
+    };
+    const id = setInterval(poll, 60000);
+    return () => clearInterval(id);
+  }, [isLive, race?.url]);
+
+  // Tick every second so "updated Xs ago" stays current
+  useEffect(() => {
+    if (!isLive) return;
+    const id = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [isLive]);
 
   function openEvent(ev) {
     setSelectedEvent(ev);
@@ -174,8 +232,11 @@ export default function RaceResultsPage() {
       : selectedEvent.race
     : null;
 
+  const secsAgo = lastPoll ? Math.round((Date.now() - lastPoll.getTime()) / 1000) : null;
+
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? '24px 14px' : '32px 24px' }}>
+      <style>{`@keyframes livePulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }`}</style>
       <button
         onClick={() => selectedEvent ? setSelectedEvent(null) : navigate('/results')}
         style={{
@@ -221,6 +282,23 @@ export default function RaceResultsPage() {
           <span>📅 {race.date}</span>
           <span>📍 {race.location}</span>
           <StatusBadge status={race.status} />
+          {isLive && !selectedEvent && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{
+                width: 7, height: 7, borderRadius: '50%', background: '#4ade80',
+                display: 'inline-block', animation: 'livePulse 1.8s ease-in-out infinite',
+                flexShrink: 0,
+              }} />
+              <span style={{ color: '#4ade80', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                Live
+              </span>
+              {secsAgo !== null && (
+                <span style={{ color: '#2d5a1b', fontFamily: "'DM Mono', monospace", fontSize: 11 }}>
+                  · {secsAgo < 5 ? 'just updated' : `updated ${secsAgo}s ago`}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -278,19 +356,21 @@ export default function RaceResultsPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {filteredEvents.map((ev, i) => {
                 const clickable = !!ev.detailsUrl;
+                const isNew = newEventIds.has(ev.eventId);
                 return (
                   <div key={i}
                     onClick={() => clickable && openEvent(ev)}
                     style={{
-                      background: 'linear-gradient(145deg, #0f220f, #0a1a0a)',
-                      border: '1px solid #1a3a1a', borderRadius: 10,
+                      background: isNew ? 'linear-gradient(145deg, #0a2016, #0a1a0a)' : 'linear-gradient(145deg, #0f220f, #0a1a0a)',
+                      border: `1px solid ${isNew ? 'rgba(74,222,128,0.5)' : '#1a3a1a'}`,
+                      borderRadius: 10,
                       padding: '14px 18px', cursor: clickable ? 'pointer' : 'default',
                       textAlign: 'left', display: 'flex', alignItems: 'center',
                       justifyContent: 'space-between', gap: 16,
-                      opacity: clickable ? 1 : 0.5, transition: 'all 0.15s',
+                      opacity: clickable ? 1 : 0.5, transition: 'all 0.3s',
                     }}
-                    onMouseEnter={e => { if (clickable) { e.currentTarget.style.borderColor = '#d4a017'; e.currentTarget.style.background = 'linear-gradient(145deg, #122612, #0d1d0d)'; } }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#1a3a1a'; e.currentTarget.style.background = 'linear-gradient(145deg, #0f220f, #0a1a0a)'; }}
+                    onMouseEnter={e => { if (clickable) { e.currentTarget.style.borderColor = isNew ? '#4ade80' : '#d4a017'; e.currentTarget.style.background = 'linear-gradient(145deg, #122612, #0d1d0d)'; } }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = isNew ? 'rgba(74,222,128,0.5)' : '#1a3a1a'; e.currentTarget.style.background = isNew ? 'linear-gradient(145deg, #0a2016, #0a1a0a)' : 'linear-gradient(145deg, #0f220f, #0a1a0a)'; }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
                       <span style={{ color: '#2d5a1b', fontFamily: "'DM Mono', monospace", fontSize: 11, flexShrink: 0 }}>
@@ -309,6 +389,13 @@ export default function RaceResultsPage() {
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flexShrink: 0 }}>
+                      {isNew && (
+                        <span style={{
+                          color: '#4ade80', fontFamily: "'DM Mono', monospace", fontSize: 9,
+                          letterSpacing: '0.15em', background: 'rgba(74,222,128,0.1)',
+                          border: '1px solid rgba(74,222,128,0.3)', borderRadius: 4, padding: '2px 6px',
+                        }}>NEW</span>
+                      )}
                       {!isMobile && <span style={{ color: '#6b7c6b', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>{ev.time}</span>}
                       <StatusBadge status={ev.status === 'Official' ? 'Official' : 'Scheduled'} />
                       {clickable
