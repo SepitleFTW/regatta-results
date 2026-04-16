@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom';
 import StatusBadge from './StatusBadge';
 import { toProxyUrl, parseEventList, parseEventResults, parseEntryList } from '../utils/proxy';
 import { REGATTAS } from '../data/regattas';
@@ -86,6 +86,10 @@ export default function RaceResultsPage() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
+  const [searchParams] = useSearchParams();
+  const initialEventId = searchParams.get('event');
+  const autoOpenedRef = useRef(false);
+
   const race = location.state?.race || findRaceById(raceId);
 
   const [events, setEvents] = useState([]);
@@ -141,6 +145,16 @@ export default function RaceResultsPage() {
     }
   }, [events]);
 
+  // Auto-open event from ?event= URL param (for shared links)
+  useEffect(() => {
+    if (!initialEventId || events.length === 0 || autoOpenedRef.current) return;
+    const ev = events.find(e => e.eventId === initialEventId);
+    if (ev?.detailsUrl) {
+      autoOpenedRef.current = true;
+      openEvent(ev);
+    }
+  }, [events, initialEventId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // isLive: regatta has started but has unfinished events
   const isLive = !loading && !error && events.length > 0 &&
     events.some(e => e.status !== 'Official');
@@ -188,6 +202,7 @@ export default function RaceResultsPage() {
   }, [isLive]);
 
   function openEvent(ev) {
+    navigate(`/results/${raceId}?event=${ev.eventId}`, { replace: true, state: location.state });
     setSelectedEvent(ev);
     setResults(null);
     setEntries(null);
@@ -238,7 +253,14 @@ export default function RaceResultsPage() {
     <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? '24px 14px' : '32px 24px' }}>
       <style>{`@keyframes livePulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }`}</style>
       <button
-        onClick={() => selectedEvent ? setSelectedEvent(null) : navigate('/results')}
+        onClick={() => {
+          if (selectedEvent) {
+            navigate(`/results/${raceId}`, { replace: true, state: location.state });
+            setSelectedEvent(null);
+          } else {
+            navigate('/results');
+          }
+        }}
         style={{
           background: 'none', border: 'none', color: '#d4a017', cursor: 'pointer',
           fontFamily: "'DM Mono', monospace", fontSize: 12, letterSpacing: '0.12em',
