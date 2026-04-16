@@ -7,9 +7,10 @@ import { useIsMobile } from '../hooks/useIsMobile';
 
 const CONCURRENCY = 8;
 
-async function fetchWithTimeout(url, ms = 8000) {
+async function fetchWithTimeout(url, ms = 8000, externalSignal = null) {
   const ctrl = new AbortController();
   const id = setTimeout(() => ctrl.abort(), ms);
+  externalSignal?.addEventListener('abort', () => ctrl.abort(), { once: true });
   try {
     const r = await fetch(url, { signal: ctrl.signal });
     return r.ok ? r.text() : null;
@@ -34,14 +35,19 @@ export default function AthleteSearch() {
   const [results, setResults] = useState([]);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [searched, setSearched] = useState(false);
-  const cancelRef = useRef(false);
+  const abortRef = useRef(null);
 
   async function handleSearch(e) {
     e?.preventDefault();
     const q = query.trim();
     if (q.length < 3) return;
 
-    cancelRef.current = false;
+    // Cancel any previous in-flight search immediately
+    abortRef.current?.abort();
+    const abort = new AbortController();
+    abortRef.current = abort;
+    const sig = abort.signal;
+
     setSearching(true);
     setSearched(true);
     setResults([]);
@@ -53,12 +59,14 @@ export default function AthleteSearch() {
     const eventGroups = (await Promise.all(
       regattas.map(async race => {
         const proxyUrl = toProxyUrl(race.url);
-        const html = await fetchWithTimeout(proxyUrl);
-        if (!html) return null;
+        const html = await fetchWithTimeout(proxyUrl, 8000, sig);
+        if (!html || sig.aborted) return null;
         const events = parseEventList(html, proxyUrl);
         return { race, events };
       })
     )).filter(Boolean);
+
+    if (sig.aborted) return;
 
     const allItems = eventGroups.flatMap(({ race, events }) =>
       events.map(ev => ({ race, ev }))
@@ -69,33 +77,34 @@ export default function AthleteSearch() {
 
     // Step 2 — fetch each event detail in batches
     await runInBatches(allItems, async ({ race, ev }) => {
-      if (cancelRef.current) return;
+      if (sig.aborted) return;
       try {
-        const html = await fetchWithTimeout(ev.detailsUrl);
-        if (html) {
-          const rows = parseEventResults(html);
-          const lower = q.toLowerCase();
-          const eventMatch = matchesEventQuery(ev.eventName, q);
-          const matches = eventMatch
-            ? rows
-            : rows.filter(r =>
-                r.athlete?.toLowerCase().includes(lower) ||
-                r.org?.toLowerCase().includes(lower)
-              );
-          if (matches.length > 0) {
-            setResults(prev => [...prev, { race, ev, matches, eventMatch }]);
-          }
+        const html = await fetchWithTimeout(ev.detailsUrl, 8000, sig);
+        if (!html || sig.aborted) return;
+        const rows = parseEventResults(html);
+        const lower = q.toLowerCase();
+        const eventMatch = matchesEventQuery(ev.eventName, q);
+        const matches = eventMatch
+          ? rows
+          : rows.filter(r =>
+              r.athlete?.toLowerCase().includes(lower) ||
+              r.org?.toLowerCase().includes(lower)
+            );
+        if (matches.length > 0) {
+          setResults(prev => [...prev, { race, ev, matches, eventMatch }]);
         }
       } catch {}
-      done++;
-      setProgress({ done, total: allItems.length });
+      if (!sig.aborted) {
+        done++;
+        setProgress({ done, total: allItems.length });
+      }
     }, CONCURRENCY);
 
-    setSearching(false);
+    if (!sig.aborted) setSearching(false);
   }
 
   function cancel() {
-    cancelRef.current = true;
+    abortRef.current?.abort();
     setSearching(false);
   }
 
