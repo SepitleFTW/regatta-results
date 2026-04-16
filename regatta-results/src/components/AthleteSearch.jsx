@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { YEARS, REGATTAS } from '../data/regattas';
 import { toProxyUrl, parseEventList, parseEventResults } from '../utils/proxy';
+import { matchesEventQuery } from '../utils/eventSearch';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 const CONCURRENCY = 8;
@@ -74,12 +75,15 @@ export default function AthleteSearch() {
         if (html) {
           const rows = parseEventResults(html);
           const lower = q.toLowerCase();
-          const matches = rows.filter(r =>
-            r.athlete?.toLowerCase().includes(lower) ||
-            r.org?.toLowerCase().includes(lower)
-          );
+          const eventMatch = matchesEventQuery(ev.eventName, q);
+          const matches = eventMatch
+            ? rows
+            : rows.filter(r =>
+                r.athlete?.toLowerCase().includes(lower) ||
+                r.org?.toLowerCase().includes(lower)
+              );
           if (matches.length > 0) {
-            setResults(prev => [...prev, { race, ev, matches }]);
+            setResults(prev => [...prev, { race, ev, matches, eventMatch }]);
           }
         }
       } catch {}
@@ -103,7 +107,7 @@ export default function AthleteSearch() {
         Athlete Search
       </h2>
       <p style={{ color: '#6b7c6b', marginBottom: 24, fontFamily: "'DM Sans', sans-serif", fontSize: isMobile ? 14 : 16 }}>
-        Search for an athlete or school across all events in a season.
+        Search by athlete, school, or event type — plain English works (e.g. "junior mens pair", "senior women eight").
       </p>
 
       {/* Search form */}
@@ -125,7 +129,7 @@ export default function AthleteSearch() {
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Athlete name or school…"
+          placeholder="Athlete, school, or event (e.g. junior mens pair)…"
           disabled={searching}
           style={{
             background: '#0f220f', border: '1px solid #1a3a1a', borderRadius: 8,
@@ -189,7 +193,7 @@ export default function AthleteSearch() {
 
       {results.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {results.map(({ race, ev, matches }, i) => (
+          {results.map(({ race, ev, matches, eventMatch }, i) => (
             <div key={i} style={{
               background: 'linear-gradient(145deg, #0f220f, #0a1a0a)',
               border: '1px solid #1a3a1a', borderRadius: 16, overflow: 'hidden',
@@ -207,8 +211,17 @@ export default function AthleteSearch() {
                 >
                   {race.name} →
                 </button>
-                <div style={{ color: '#f5f0e0', fontFamily: "'Playfair Display', serif", fontSize: '1rem' }}>
-                  {ev.eventName}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <div style={{ color: '#f5f0e0', fontFamily: "'Playfair Display', serif", fontSize: '1rem' }}>
+                    {ev.eventName}
+                  </div>
+                  {eventMatch && (
+                    <span style={{
+                      color: '#4ade80', fontFamily: "'DM Mono', monospace", fontSize: 9,
+                      letterSpacing: '0.12em', background: 'rgba(74,222,128,0.08)',
+                      border: '1px solid rgba(74,222,128,0.25)', borderRadius: 4, padding: '2px 6px',
+                    }}>EVENT MATCH</span>
+                  )}
                 </div>
                 <div style={{ color: '#6b7c6b', fontFamily: "'DM Sans', sans-serif", fontSize: 12, marginTop: 2 }}>
                   {ev.race} · {ev.time}
