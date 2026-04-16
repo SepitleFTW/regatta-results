@@ -73,7 +73,6 @@ export default function ResultsBrowser() {
   );
 
   function openRace(race) {
-    if (race.status === "Upcoming") return;
     navigate(`/results/${race.id}`, { state: { race } });
   }
 
@@ -156,7 +155,7 @@ export default function ResultsBrowser() {
                 <div
                   key={r.id}
                   onClick={() => openRace(r)}
-                  style={{ cursor: r.status !== "Upcoming" ? "pointer" : "default" }}
+                  style={{ cursor: "pointer" }}
                 >
                   <div style={{
                     background: "linear-gradient(145deg, #0f220f, #0a1a0a)",
@@ -179,7 +178,7 @@ export default function ResultsBrowser() {
                     </div>
                     <div style={{ marginTop: 16 }}>
                       <span style={{ color: "#d4a017", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>
-                        {r.status === "Upcoming" ? "Results coming soon" : "View results →"}
+                        {r.status === "Upcoming" ? "View lane draw →" : "View results →"}
                       </span>
                     </div>
                   </div>
