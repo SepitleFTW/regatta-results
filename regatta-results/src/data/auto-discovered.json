@@ -1,1 +1,321 @@
-{}
+{
+  "2025": [
+    {
+      "id": "2025-Jan-KES1619",
+      "name": "KES GSRF U16 & U19 Regatta",
+      "date": "18 January 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "https://regattaresults.co.za/Results/Results2025/2025-Jan-KES1619/results.htm"
+    },
+    {
+      "id": "2025-Jan-WCNewYear",
+      "name": "WC New Year Regatta",
+      "date": "18 January 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "https://regattaresults.co.za/Results/Results2025/2025-Jan-WCNewYear/results.htm"
+    },
+    {
+      "id": "2025-Jan-VLCSprints",
+      "name": "ISIS Engineering VLC National Sprints Regatta",
+      "date": "25 & 26 January 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "https://regattaresults.co.za/Results/Results2025/2025-Jan-VLCSprints/results.htm"
+    },
+    {
+      "id": "2025-Jan-WCchamps",
+      "name": "WC Champs",
+      "date": "25 January 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "https://regattaresults.co.za/Results/Results2025/2025-Jan-WCchamps/results.htm"
+    },
+    {
+      "id": "2025-Feb-ECRAChamps",
+      "name": "ECRA Champs",
+      "date": "1 February 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "https://regattaresults.co.za/Results/Results2025/2025-Feb-ECRAChamps/results.htm"
+    },
+    {
+      "id": "2025-Feb-Jeppe1415",
+      "name": "Jeppe U14 & U15 GSRF Regatta",
+      "date": "1 February 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "https://regattaresults.co.za/Results/Results2025/2025-Feb-Jeppe1415/results.htm"
+    },
+    {
+      "id": "2025-Feb-Buffalo",
+      "name": "Buffalo Regatta",
+      "date": "6 & 8 February 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "https://regattaresults.co.za/Results/Results2025/2025-Feb-Buffalo/results.htm"
+    },
+    {
+      "id": "2025-Feb-SelborneS",
+      "name": "Selborne Sprints",
+      "date": "7 February 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "https://regattaresults.co.za/Results/Results2025/2025-Feb-SelborneS/results.htm"
+    },
+    {
+      "id": "2025-Feb-Saints1619",
+      "name": "St Stithians GSRF U16 & U19",
+      "date": "15 Feb 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "https://regattaresults.co.za/Results/Results2025/2025-Feb-Saints1619/results.htm"
+    },
+    {
+      "id": "2025-Feb-Albans",
+      "name": "St Albans Regatta",
+      "date": "22 Feb 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "https://regattaresults.co.za/Results/Results2025/2025-Feb-Albans/results.htm"
+    },
+    {
+      "id": "2025-Mar-SAChamps",
+      "name": "SA Schools Champs 28 Feb",
+      "date": "2 March 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "https://regattaresults.co.za/Results/Results2025/2025-Mar-SAChamps/results.htm"
+    },
+    {
+      "id": "2025-Apr-USSAR",
+      "name": "USSAR Sprints - 4",
+      "date": "5 April 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "https://regattaresults.co.za/Results/Results2025/2025-Apr-USSAR/results.htm"
+    },
+    {
+      "id": "2025-Apr-Gauteng",
+      "name": "Gauteng Champs",
+      "date": "12 April 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "https://regattaresults.co.za/Results/Results2025/2025-Apr-Gauteng/results.htm"
+    },
+    {
+      "id": "2025-Apr-SANChamps",
+      "name": "SA National Rowing Champs - 26",
+      "date": "27 April 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "https://regattaresults.co.za/Results/Results2025/2025-Apr-SANChamps/results.htm"
+    },
+    {
+      "id": "2025-Sept-Ben1415",
+      "name": "St Bennies U14 & U15",
+      "date": "20 Sept 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://regattaresults.co.za/Results/Results2025/2025-Sept-Ben1415/results.htm"
+    },
+    {
+      "id": "2025-Sept-SJ1619S",
+      "name": "St John's U16, U19 & Snr",
+      "date": "27 Sept 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://www.regattaresults.co.za/Results/Results2025/2025-Sept-SJ1619S/results.htm"
+    },
+    {
+      "id": "2025-Oct-Mary1415S",
+      "name": "St Mary's U14, U15 & Masters",
+      "date": "4 Oct 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://www.regattaresults.co.za/Results/Results2025/2025-Oct-Mary1415S/results.htm"
+    },
+    {
+      "id": "2025-Oct-Mile",
+      "name": "The Mile Regatta - 11",
+      "date": "12 Oct 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "https://regattaresults.co.za/http:/www.regattaresults.co.za/Results/Results2025/2025-Oct-Mile/results.htm"
+    },
+    {
+      "id": "2025-Oct-Saints1619s",
+      "name": "St Stithian's U16, U9 & Seniors",
+      "date": "18 Oct 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://regattaresults.co.za/Results/Results2025/2025-Oct-Saints1619s/results.htm"
+    },
+    {
+      "id": "2025-Oct-CPC",
+      "name": "Cape Peninsula Champs - 18",
+      "date": "19 Oct (WC) 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://regattaresults.co.za//Results/Results2025/2025-Oct-CPC/results.htm"
+    },
+    {
+      "id": "2025-Oct-Dunstans1415M",
+      "name": "St Dunstan's U14, U15 & Masters",
+      "date": "25 Oct 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://www.regattaresults.co.za/Results/Results2025/2025-Oct-Dunstans1415M/results.htm"
+    },
+    {
+      "id": "2025-Oct-WCChamps",
+      "name": "WC Champs - 25",
+      "date": "26 Oct 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://www.regattaresults.co.za/Results/Results2025/2025-Oct-WCChamps/results.htm"
+    },
+    {
+      "id": "2025-OctNov-GSRF",
+      "name": "GSRF & Africa Champs - 31 Oct",
+      "date": "2 Nov 2025",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://www.regattaresults.co.za/Results/Results2025/2025-OctNov-GSRF/results.htm"
+    }
+  ],
+  "2026": [
+    {
+      "id": "2026-Jan-KES",
+      "name": "KES U16, U19 & Seniors",
+      "date": "17 Jan 2026",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://regattaresults.co.za/Results/Results2026/2026-Jan-KES/results.htm"
+    },
+    {
+      "id": "2026-Jan-VLC",
+      "name": "VLC Nationals Sprints - 24",
+      "date": "25 Jan 2026",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://regattaresults.co.za/Results/Results2026/2026-Jan-VLC/results.htm"
+    },
+    {
+      "id": "2026-Jan-NickW",
+      "name": "WC Nick Whaits Regatta",
+      "date": "24 Jan 2026",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://regattaresults.co.za/Results/Results2026/2026-Jan-NickW/results.htm"
+    },
+    {
+      "id": "2026-Jan-HRS",
+      "name": "Holy Rosary U14, U15 & Masters",
+      "date": "31 Jan 2026",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://regattaresults.co.za/Results/Results2026/2026-Jan-HRS/results.htm"
+    },
+    {
+      "id": "2026-Jan-ECChamps",
+      "name": "EC Champs",
+      "date": "31 Jan 2026",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://regattaresults.co.za/Results/Results2026/2026-Jan-ECChamps/results.htm"
+    },
+    {
+      "id": "2026-Feb-Buffalo",
+      "name": "Buffalo Regatta",
+      "date": "5 & 7 Feb 2026",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://regattaresults.co.za/Results/Results2026/2026-Feb-Buffalo/results.htm"
+    },
+    {
+      "id": "2026-Feb-Selborne",
+      "name": "Selborne Sprints",
+      "date": "6 Feb 2026",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://regattaresults.co.za/Results/Results2026/2026-Feb-Selborne/results.htm"
+    },
+    {
+      "id": "2026-Feb-Jep1415M",
+      "name": "Jeppe U14,U15 & Masters",
+      "date": "14 Feb 2026",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://regattaresults.co.za/Results/Results2026/2026-Feb-Jep1415M/results.htm"
+    },
+    {
+      "id": "2026-Feb-Albans1619S",
+      "name": "St Albans U16, U19 & Seniors",
+      "date": "21 Feb 2026",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://regattaresults.co.za/Results/Results2026/2026-Feb-Albans1619S/results.htm"
+    },
+    {
+      "id": "2026-Feb-AC1415M",
+      "name": "Assumption U14, U15 & Masters",
+      "date": "28 Feb 2026",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://regattaresults.co.za/Results/Results2026/2026-Feb-AC1415M/results.htm"
+    },
+    {
+      "id": "2026-Feb-SASChamps",
+      "name": "SA Schools Champs",
+      "date": "6, 7, 8 Mar 2026",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://www.regattaresults.co.za/Results/Results2026/2026-Feb-SASChamps/results.htm"
+    },
+    {
+      "id": "2026-april11-snr",
+      "name": "Gauteng Senior Champs",
+      "date": "11 April 2026",
+      "location": "",
+      "province": "",
+      "status": "Official",
+      "url": "http://www.regattaresults.co.za/Results/Results2026/2026-april11-snr/results.htm"
+    }
+  ]
+}
