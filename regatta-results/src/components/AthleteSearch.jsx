@@ -36,6 +36,7 @@ export default function AthleteSearch() {
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [searched, setSearched] = useState(false);
   const abortRef = useRef(null);
+  const [justCancelled, setJustCancelled] = useState(false);
 
   async function handleSearch(e) {
     e?.preventDefault();
@@ -106,6 +107,8 @@ export default function AthleteSearch() {
   function cancel() {
     abortRef.current?.abort();
     setSearching(false);
+    setJustCancelled(true);
+    setTimeout(() => setJustCancelled(false), 400);
   }
 
   const pct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
@@ -148,17 +151,21 @@ export default function AthleteSearch() {
         />
 
         {searching ? (
-          <button type="button" onClick={cancel} style={{
-            background: '#2d1b1b', border: '1px solid #7f1d1d', color: '#f87171',
-            borderRadius: 8, padding: '10px 24px', fontSize: 14, fontWeight: 600,
-            cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
-          }}>Cancel</button>
+          <button
+            type="button"
+            onPointerDown={e => { e.preventDefault(); cancel(); }}
+            style={{
+              background: '#2d1b1b', border: '1px solid #7f1d1d', color: '#f87171',
+              borderRadius: 8, padding: '10px 24px', fontSize: 14, fontWeight: 600,
+              cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+            }}
+          >Cancel</button>
         ) : (
-          <button type="submit" disabled={query.trim().length < 3} style={{
-            background: query.trim().length >= 3 ? '#d4a017' : '#1a3a1a',
-            border: 'none', color: query.trim().length >= 3 ? '#030a03' : '#4a6b4a',
+          <button type="submit" disabled={query.trim().length < 3 || justCancelled} style={{
+            background: query.trim().length >= 3 && !justCancelled ? '#d4a017' : '#1a3a1a',
+            border: 'none', color: query.trim().length >= 3 && !justCancelled ? '#030a03' : '#4a6b4a',
             borderRadius: 8, padding: '10px 24px', fontSize: 14, fontWeight: 700,
-            cursor: query.trim().length >= 3 ? 'pointer' : 'default',
+            cursor: query.trim().length >= 3 && !justCancelled ? 'pointer' : 'default',
             fontFamily: "'DM Sans', sans-serif", transition: 'all 0.15s',
           }}>Search</button>
         )}
