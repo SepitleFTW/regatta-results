@@ -8,55 +8,65 @@ export function getWatched() {
   catch { return []; }
 }
 
-export function addWatched(race) {
+export function addWatched(item) {
   const list = getWatched();
-  if (!list.find(r => r.id === race.id)) {
+  if (!list.find(r => r.id === item.id)) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([
       ...list,
-      { id: race.id, name: race.name, url: race.url, notified: false },
+      { notified: false, ...item },
     ]));
   }
 }
 
-export function removeWatched(raceId) {
-  const list = getWatched().filter(r => r.id !== raceId);
+export function removeWatched(id) {
+  const list = getWatched().filter(r => r.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 }
 
-export function isWatched(raceId) {
-  return getWatched().some(r => r.id === raceId);
+export function isWatched(id) {
+  return getWatched().some(r => r.id === id);
+}
+
+async function checkWatched(setAlerts) {
+  const watched = getWatched().filter(r => !r.notified);
+  if (!watched.length) return;
+
+  for (const item of watched) {
+    try {
+      const proxyUrl = toProxyUrl(item.url);
+      const res = await fetch(proxyUrl);
+      if (!res.ok) continue;
+      const html = await res.text();
+      const events = parseEventList(html, proxyUrl);
+
+      const hasResults = item.eventId
+        ? events.find(e => e.eventId === item.eventId)?.status === 'Official'
+        : events.some(e => e.status === 'Official');
+
+      if (!hasResults) continue;
+
+      const updated = getWatched().map(r => r.id === item.id ? { ...r, notified: true } : r);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+
+      setAlerts(prev => [...prev, { id: item.id, name: item.name, raceId: item.raceId }]);
+
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(`Results live: ${item.name}`, {
+          body: 'Results have been posted on Regatta Results SA.',
+          icon: '/favicon.ico',
+        });
+      }
+    } catch {}
+  }
 }
 
 export function useResultsAlerts() {
   const [alerts, setAlerts] = useState([]);
 
   useEffect(() => {
-    const watched = getWatched().filter(r => !r.notified);
-    if (!watched.length) return;
-
-    watched.forEach(async ({ id, name, url }) => {
-      try {
-        const proxyUrl = toProxyUrl(url);
-        const res = await fetch(proxyUrl);
-        if (!res.ok) return;
-        const html = await res.text();
-        const events = parseEventList(html, proxyUrl);
-        const hasResults = events.some(e => e.status === 'Official');
-        if (!hasResults) return;
-
-        const updated = getWatched().map(r => r.id === id ? { ...r, notified: true } : r);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-
-        setAlerts(prev => [...prev, { id, name }]);
-
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification(`Results live: ${name}`, {
-            body: 'Race results have been posted on Regatta Results SA.',
-            icon: '/favicon.ico',
-          });
-        }
-      } catch {}
-    });
+    checkWatched(setAlerts);
+    const id = setInterval(() => checkWatched(setAlerts), 60000);
+    return () => clearInterval(id);
   }, []);
 
   function dismiss(id) {
