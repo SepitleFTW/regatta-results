@@ -99,7 +99,21 @@ export default function RaceResultsPage() {
     return evs;
   })();
 
-  useEffect(() => { window.scrollTo(0, 0); }, []);
+  // Scroll to top only when opening a specific event (has ?event= on mount).
+  // When refreshing the plain event list, we restore the saved position instead.
+  useEffect(() => {
+    if (mountEventId.current) window.scrollTo(0, 0);
+  }, []);
+
+  // Restore event-list scroll after events finish loading (plain refresh, no ?event=)
+  const listRestoredRef = useRef(false);
+  const listScrollKey = `scroll:event-list:${raceId}`;
+  useEffect(() => {
+    if (mountEventId.current || loading || events.length === 0 || listRestoredRef.current) return;
+    listRestoredRef.current = true;
+    const saved = sessionStorage.getItem(listScrollKey);
+    if (saved) setTimeout(() => window.scrollTo(0, parseInt(saved, 10)), 0);
+  }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!race) return;
@@ -183,6 +197,8 @@ export default function RaceResultsPage() {
   }, [isLive]);
 
   function openEvent(ev) {
+    // Save list position so we can restore it when going back
+    sessionStorage.setItem(listScrollKey, String(Math.round(window.scrollY)));
     navigate(`/results/${raceId}?event=${evKey(ev)}`, { replace: true, state: location.state });
     setSelectedEvent(ev);
     setResults(null);
@@ -238,6 +254,8 @@ export default function RaceResultsPage() {
           if (selectedEvent) {
             navigate(`/results/${raceId}`, { replace: true, state: location.state });
             setSelectedEvent(null);
+            const saved = sessionStorage.getItem(listScrollKey);
+            if (saved) setTimeout(() => window.scrollTo(0, parseInt(saved, 10)), 50);
           } else {
             navigate('/results');
           }
