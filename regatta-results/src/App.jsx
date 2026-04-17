@@ -156,7 +156,7 @@ export default function App() {
                 Results Live
               </span>
               <span style={{ flex: 1, color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif", fontSize: 14 }}>{a.name}</span>
-              <button onClick={() => navigate(`/results/${a.id}`)} style={{
+              <button onClick={() => navigate(`/results/${a.raceId || a.id}`)} style={{
                 background: '#4ade80', color: '#030a03', border: 'none', borderRadius: 6,
                 padding: '4px 14px', cursor: 'pointer',
                 fontFamily: "'DM Mono', monospace", fontSize: 11, fontWeight: 700,

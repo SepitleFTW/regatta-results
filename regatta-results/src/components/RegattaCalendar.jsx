@@ -4,6 +4,7 @@ import { REGATTAS } from '../data/regattas';
 import StatusBadge from './StatusBadge';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useWeather } from '../hooks/useWeather';
+import { useScrollRestoration } from '../hooks/useScrollRestoration';
 import BellButton from './BellButton';
 
 function WeatherBadge({ location }) {
@@ -41,6 +42,7 @@ function parseDate(str) {
 export default function RegattaCalendar() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  useScrollRestoration();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
 
