@@ -76,8 +76,13 @@ async function checkWatched(setAlerts) {
         : `${names[0]} + ${names.length - 1} more`;
 
       const alertId = `${item.id}__${Date.now()}`;
-      setAlerts(prev => [...prev, { id: alertId, name: `${label} — ${item.name}`, raceId: item.id, url: item.url }]);
-      showNotification(`Results: ${label}`, item.name, `/results/${item.id}`);
+      // When a single event goes Official, carry its detailsUrl so View → opens it directly
+      const eventDetailUrl = newlyOfficial.length === 1 ? newlyOfficial[0].detailsUrl : null;
+      setAlerts(prev => [...prev, { id: alertId, name: `${label} — ${item.name}`, raceId: item.id, url: item.url, eventDetailUrl }]);
+      const notifPath = eventDetailUrl
+        ? `/results/${item.id}?event=${encodeURIComponent(eventDetailUrl)}`
+        : `/results/${item.id}`;
+      showNotification(`Results: ${label}`, item.name, notifPath);
     } catch {}
   }
 }

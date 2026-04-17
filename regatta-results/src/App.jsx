@@ -158,7 +158,10 @@ export default function App() {
               <span style={{ flex: 1, color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif", fontSize: 14 }}>{a.name}</span>
               <button onClick={() => {
                 const rId = a.raceId || a.id;
-                navigate(`/results/${rId}`, { state: { race: { id: rId, name: a.name, url: a.url } } });
+                const path = a.eventDetailUrl
+                  ? `/results/${rId}?event=${encodeURIComponent(a.eventDetailUrl)}`
+                  : `/results/${rId}`;
+                navigate(path, { state: { race: { id: rId, name: a.name, url: a.url } } });
               }} style={{
                 background: '#4ade80', color: '#030a03', border: 'none', borderRadius: 6,
                 padding: '4px 14px', cursor: 'pointer',
