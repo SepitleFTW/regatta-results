@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import StatusBadge from './StatusBadge';
 import { YEARS, PROVINCES, REGATTAS } from '../data/regattas';
 import { useIsMobile } from '../hooks/useIsMobile';
-import { useScrollRestoration } from '../hooks/useScrollRestoration';
+import { useScrollRestoration, saveScrollNow } from '../hooks/useScrollRestoration';
 import BellButton from './BellButton';
 
 // Some years use non-standard slugs on regattaresults.co.za
@@ -76,6 +76,7 @@ export default function ResultsBrowser() {
   );
 
   function openRace(race) {
+    saveScrollNow(window.location.pathname);
     navigate(`/results/${race.id}`, { state: { race } });
   }
 

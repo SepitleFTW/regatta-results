@@ -1,39 +1,59 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 
 if (typeof window !== 'undefined') {
   window.history.scrollRestoration = 'manual';
 }
 
-// ready: pass false until async content has rendered, then flip to true
+export const SCROLL_KEY = (pathname) => `scroll:${pathname}`;
+
+// Call this before any navigate() so the position is captured at click time,
+// independent of the debounced scroll listener.
+export function saveScrollNow(pathname) {
+  sessionStorage.setItem(SCROLL_KEY(pathname), String(Math.round(window.scrollY)));
+}
+
+// ready: pass false until async content is in the DOM, then true
 export function useScrollRestoration(ready = true) {
   const { pathname } = useLocation();
-  const key = `scroll:${pathname}`;
-  const timerRef = useRef(null);
+  const key = SCROLL_KEY(pathname);
+  const debounceRef = useRef(null);
+  const retryRef = useRef(null);
 
-  // Continuously track scroll position so the saved value is always current.
-  // Saving on unmount is unreliable — mobile browsers scroll to 0 before React
-  // runs cleanup, so we'd save 0 every time.
+  // Save via scroll events (debounced) as a passive backup
   useEffect(() => {
     function onScroll() {
-      clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
         sessionStorage.setItem(key, String(Math.round(window.scrollY)));
-      }, 150);
+      }, 200);
     }
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', onScroll);
-      clearTimeout(timerRef.current);
+      clearTimeout(debounceRef.current);
+      clearTimeout(retryRef.current);
     };
   }, [key]);
 
-  // Restore once content is ready
-  useEffect(() => {
+  // Restore: useLayoutEffect fires after DOM update, before paint.
+  // Retry up to 8 times (every 50ms) in case the layout hasn't settled yet.
+  useLayoutEffect(() => {
     if (!ready) return;
     const saved = sessionStorage.getItem(key);
-    if (saved) {
-      requestAnimationFrame(() => window.scrollTo(0, parseInt(saved, 10)));
+    if (!saved || saved === '0') return;
+    const pos = parseInt(saved, 10);
+
+    let attempts = 0;
+    function tryScroll() {
+      window.scrollTo(0, pos);
+      attempts++;
+      if (attempts < 8 && Math.abs(window.scrollY - pos) > 10) {
+        retryRef.current = setTimeout(tryScroll, 50);
+      }
     }
+    // Defer one tick so the browser has committed layout
+    retryRef.current = setTimeout(tryScroll, 0);
+    return () => clearTimeout(retryRef.current);
   }, [ready, key]);
 }

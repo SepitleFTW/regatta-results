@@ -4,7 +4,7 @@ import { REGATTAS } from '../data/regattas';
 import StatusBadge from './StatusBadge';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useWeather } from '../hooks/useWeather';
-import { useScrollRestoration } from '../hooks/useScrollRestoration';
+import { useScrollRestoration, saveScrollNow } from '../hooks/useScrollRestoration';
 import BellButton from './BellButton';
 
 function WeatherBadge({ location }) {
@@ -134,7 +134,7 @@ export default function RegattaCalendar() {
                   return (
                     <div
                       key={r.id}
-                      onClick={() => navigate(`/results/${r.id}`, { state: { race: r } })}
+                      onClick={() => { saveScrollNow(window.location.pathname); navigate(`/results/${r.id}`, { state: { race: r } }); }}
                       style={{
                         background: isUpcoming ? 'linear-gradient(145deg, #122612, #0f220f)' : 'linear-gradient(145deg, #0f220f, #0a1a0a)',
                         border: `1px solid ${isUpcoming ? '#1e4a1e' : '#1a3a1a'}`,
