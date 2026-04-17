@@ -63,7 +63,9 @@ export default function RaceResultsPage() {
   const isMobile = useIsMobile();
 
   const [searchParams] = useSearchParams();
-  const initialEventId = searchParams.get('event');
+  // Capture the ?event= param at mount time only — we never want the auto-open
+  // to re-trigger when openEvent() itself changes the URL.
+  const mountEventId = useRef(searchParams.get('event'));
   const autoOpenedRef = useRef(false);
 
   const race = location.state?.race || findRaceById(raceId);
@@ -121,16 +123,18 @@ export default function RaceResultsPage() {
     }
   }, [events]);
 
-  // Auto-open event from ?event= URL param (for shared links)
+  // Auto-open event from ?event= URL param (refresh / shared link).
+  // Depends only on [events] — NOT on the live searchParam — so that openEvent()
+  // changing the URL never re-triggers this and accidentally opens the wrong heat.
   useEffect(() => {
-    if (!initialEventId || events.length === 0 || autoOpenedRef.current) return;
-    // initialEventId is already URL-decoded by URLSearchParams; match against raw detailsUrl
-    const ev = events.find(e => (e.detailsUrl || e.eventId) === initialEventId);
+    if (!mountEventId.current || events.length === 0 || autoOpenedRef.current) return;
+    const target = mountEventId.current; // detailsUrl (decoded) or legacy eventId
+    const ev = events.find(e => (e.detailsUrl || e.eventId) === target);
     if (ev?.detailsUrl) {
       autoOpenedRef.current = true;
       openEvent(ev);
     }
-  }, [events, initialEventId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [events]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // isLive: regatta has started but has unfinished events
   const isLive = !loading && !error && events.length > 0 &&
