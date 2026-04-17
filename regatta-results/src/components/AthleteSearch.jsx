@@ -24,7 +24,7 @@ async function runInBatches(items, fn, size) {
   }
 }
 
-const PLACE_COLOR = { '1': '#d4a017', '2': '#9ca3af', '3': '#a0522d' };
+const PLACE_COLOR = { '1': 'var(--t-gold)', '2': '#9ca3af', '3': '#a0522d' };
 
 export default function AthleteSearch() {
   const navigate = useNavigate();
@@ -43,7 +43,6 @@ export default function AthleteSearch() {
     const q = query.trim();
     if (q.length < 3) return;
 
-    // Cancel any previous in-flight search immediately
     abortRef.current?.abort();
     const abort = new AbortController();
     abortRef.current = abort;
@@ -56,7 +55,6 @@ export default function AthleteSearch() {
 
     const regattas = REGATTAS[year] || [];
 
-    // Step 1 — fetch all regatta event lists in parallel
     const eventGroups = (await Promise.all(
       regattas.map(async race => {
         const proxyUrl = toProxyUrl(race.url);
@@ -76,7 +74,6 @@ export default function AthleteSearch() {
     setProgress({ done: 0, total: allItems.length });
     let done = 0;
 
-    // Step 2 — fetch each event detail in batches
     await runInBatches(allItems, async ({ race, ev }) => {
       if (sig.aborted) return;
       try {
@@ -115,22 +112,21 @@ export default function AthleteSearch() {
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? '24px 16px' : '32px 24px' }}>
-      <h2 style={{ fontFamily: "'Playfair Display', serif", color: '#f5f0e0', fontSize: isMobile ? '1.8rem' : '2.2rem', marginBottom: 8 }}>
+      <h2 style={{ fontFamily: "'Playfair Display', serif", color: 'var(--t-text)', fontSize: isMobile ? '1.8rem' : '2.2rem', marginBottom: 8 }}>
         Athlete Search
       </h2>
-      <p style={{ color: '#6b7c6b', marginBottom: 24, fontFamily: "'DM Sans', sans-serif", fontSize: isMobile ? 14 : 16 }}>
+      <p style={{ color: 'var(--t-muted)', marginBottom: 24, fontFamily: "'DM Sans', sans-serif", fontSize: isMobile ? 14 : 16 }}>
         Search by athlete, school, or event type — plain English works (e.g. "junior mens pair", "senior women eight").
       </p>
 
-      {/* Search form */}
       <form onSubmit={handleSearch} style={{ display: 'flex', gap: 10, marginBottom: 28, flexDirection: isMobile ? 'column' : 'row' }}>
         <select
           value={year}
           onChange={e => setYear(parseInt(e.target.value))}
           disabled={searching}
           style={{
-            background: '#0f220f', border: '1px solid #1a3a1a', borderRadius: 8,
-            padding: '10px 16px', color: '#e8e0c8', fontFamily: "'DM Mono', monospace",
+            background: 'var(--t-bg-card)', border: '1px solid var(--t-border-s)', borderRadius: 8,
+            padding: '10px 16px', color: 'var(--t-text2)', fontFamily: "'DM Mono', monospace",
             fontSize: 14, cursor: 'pointer', outline: 'none',
             width: isMobile ? '100%' : 'auto',
           }}
@@ -144,8 +140,8 @@ export default function AthleteSearch() {
           placeholder="Athlete, school, or event (e.g. junior mens pair)…"
           disabled={searching}
           style={{
-            background: '#0f220f', border: '1px solid #1a3a1a', borderRadius: 8,
-            padding: '10px 16px', color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif",
+            background: 'var(--t-bg-card)', border: '1px solid var(--t-border-s)', borderRadius: 8,
+            padding: '10px 16px', color: 'var(--t-text2)', fontFamily: "'DM Sans', sans-serif",
             fontSize: 14, flex: 1, outline: 'none',
           }}
         />
@@ -155,15 +151,15 @@ export default function AthleteSearch() {
             type="button"
             onPointerDown={e => { e.preventDefault(); cancel(); }}
             style={{
-              background: '#2d1b1b', border: '1px solid #7f1d1d', color: '#f87171',
+              background: 'var(--t-red-bg)', border: '1px solid var(--t-red-b)', color: 'var(--t-red)',
               borderRadius: 8, padding: '10px 24px', fontSize: 14, fontWeight: 600,
               cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
             }}
           >Cancel</button>
         ) : (
           <button type="submit" disabled={query.trim().length < 3 || justCancelled} style={{
-            background: query.trim().length >= 3 && !justCancelled ? '#d4a017' : '#1a3a1a',
-            border: 'none', color: query.trim().length >= 3 && !justCancelled ? '#030a03' : '#4a6b4a',
+            background: query.trim().length >= 3 && !justCancelled ? 'var(--t-gold)' : 'var(--t-border-s)',
+            border: 'none', color: query.trim().length >= 3 && !justCancelled ? 'var(--t-bg-deep)' : 'var(--t-dim)',
             borderRadius: 8, padding: '10px 24px', fontSize: 14, fontWeight: 700,
             cursor: query.trim().length >= 3 && !justCancelled ? 'pointer' : 'default',
             fontFamily: "'DM Sans', sans-serif", transition: 'all 0.15s',
@@ -171,36 +167,34 @@ export default function AthleteSearch() {
         )}
       </form>
 
-      {/* Progress bar */}
       {searching && (
         <div style={{ marginBottom: 28 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            <span style={{ color: 'var(--t-dim)', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
               Searching events…
             </span>
-            <span style={{ color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 11 }}>
+            <span style={{ color: 'var(--t-dim)', fontFamily: "'DM Mono', monospace", fontSize: 11 }}>
               {progress.done} / {progress.total}
             </span>
           </div>
-          <div style={{ background: '#0f220f', borderRadius: 4, height: 4, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--t-bg-card)', borderRadius: 4, height: 4, overflow: 'hidden' }}>
             <div style={{
-              background: '#d4a017', height: '100%', borderRadius: 4,
+              background: 'var(--t-gold)', height: '100%', borderRadius: 4,
               width: `${pct}%`, transition: 'width 0.2s',
             }} />
           </div>
           {results.length > 0 && (
-            <p style={{ color: '#4ade80', fontFamily: "'DM Mono', monospace", fontSize: 11, marginTop: 6 }}>
+            <p style={{ color: 'var(--t-green)', fontFamily: "'DM Mono', monospace", fontSize: 11, marginTop: 6 }}>
               {results.length} match{results.length !== 1 ? 'es' : ''} found so far…
             </p>
           )}
         </div>
       )}
 
-      {/* Results */}
       {!searching && searched && results.length === 0 && (
         <div style={{
-          background: '#0f220f', border: '1px dashed #1a3a1a', borderRadius: 16,
-          padding: 48, textAlign: 'center', color: '#4a6b4a',
+          background: 'var(--t-bg-card)', border: '1px dashed var(--t-border-s)', borderRadius: 16,
+          padding: 48, textAlign: 'center', color: 'var(--t-dim)',
           fontFamily: "'DM Sans', sans-serif", fontSize: 15,
         }}>
           No results found for "{query}" in {year}.
@@ -211,16 +205,15 @@ export default function AthleteSearch() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {results.map(({ race, ev, matches, eventMatch }, i) => (
             <div key={i} style={{
-              background: 'linear-gradient(145deg, #0f220f, #0a1a0a)',
-              border: '1px solid #1a3a1a', borderRadius: 16, overflow: 'hidden',
+              background: 'linear-gradient(145deg, var(--t-bg-card), var(--t-bg))',
+              border: '1px solid var(--t-border-s)', borderRadius: 16, overflow: 'hidden',
             }}>
-              {/* Regatta + event header */}
-              <div style={{ padding: '16px 20px', borderBottom: '1px solid #1a3a1a' }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--t-border-s)' }}>
                 <button
                   onClick={() => navigate(`/results/${race.id}`, { state: { race } })}
                   style={{
                     background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                    color: '#d4a017', fontFamily: "'DM Mono', monospace",
+                    color: 'var(--t-gold)', fontFamily: "'DM Mono', monospace",
                     fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
                     display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4,
                   }}
@@ -228,37 +221,36 @@ export default function AthleteSearch() {
                   {race.name} →
                 </button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <div style={{ color: '#f5f0e0', fontFamily: "'Playfair Display', serif", fontSize: '1rem' }}>
+                  <div style={{ color: 'var(--t-text)', fontFamily: "'Playfair Display', serif", fontSize: '1rem' }}>
                     {ev.eventName}
                   </div>
                   {eventMatch && (
                     <span style={{
-                      color: '#4ade80', fontFamily: "'DM Mono', monospace", fontSize: 9,
-                      letterSpacing: '0.12em', background: 'rgba(74,222,128,0.08)',
-                      border: '1px solid rgba(74,222,128,0.25)', borderRadius: 4, padding: '2px 6px',
+                      color: 'var(--t-green)', fontFamily: "'DM Mono', monospace", fontSize: 9,
+                      letterSpacing: '0.12em', background: 'var(--t-green-d)',
+                      border: '1px solid var(--t-green-b)', borderRadius: 4, padding: '2px 6px',
                     }}>EVENT MATCH</span>
                   )}
                 </div>
-                <div style={{ color: '#6b7c6b', fontFamily: "'DM Sans', sans-serif", fontSize: 12, marginTop: 2 }}>
+                <div style={{ color: 'var(--t-muted)', fontFamily: "'DM Sans', sans-serif", fontSize: 12, marginTop: 2 }}>
                   {ev.race} · {ev.time}
                 </div>
               </div>
 
-              {/* Matching rows */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                 {matches.map((row, j) => {
                   const medalColor = PLACE_COLOR[row.place];
                   const isFinished = !['scratch','dns','dnf'].some(s => row.status.toLowerCase().includes(s));
                   return (
                     <div key={j} style={{
-                      padding: '12px 20px', borderTop: j > 0 ? '1px solid #0f220f' : 'none',
+                      padding: '12px 20px', borderTop: j > 0 ? '1px solid var(--t-border)' : 'none',
                       display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
                     }}>
                       <div style={{
                         width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-                        border: `2px solid ${isFinished ? (medalColor || '#1a3a1a') : '#2d1b1b'}`,
+                        border: `2px solid ${isFinished ? (medalColor || 'var(--t-border-s)') : 'var(--t-red-b)'}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: isFinished ? (medalColor || '#4a6b4a') : '#4a6b4a',
+                        color: isFinished ? (medalColor || 'var(--t-dim)') : 'var(--t-dim)',
                         fontFamily: "'DM Mono', monospace", fontWeight: 700, fontSize: 12,
                       }}>
                         {isFinished ? row.place : '–'}
@@ -269,33 +261,33 @@ export default function AthleteSearch() {
                             onClick={e => { e.stopPropagation(); navigate(`/athlete/${encodeURIComponent(row.athlete)}`); }}
                             style={{
                               background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                              color: '#f5f0e0', fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600,
-                              textAlign: 'left', textDecoration: 'underline', textDecorationColor: 'rgba(212,160,23,0.4)',
+                              color: 'var(--t-text)', fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600,
+                              textAlign: 'left', textDecoration: 'underline', textDecorationColor: 'var(--t-gold-b)',
                               textUnderlineOffset: 3,
                             }}
                           >{row.athlete}</button>
                         ) : (
-                          <div style={{ color: '#4a6b4a', fontFamily: "'DM Sans', sans-serif", fontSize: 14 }}>—</div>
+                          <div style={{ color: 'var(--t-dim)', fontFamily: "'DM Sans', sans-serif", fontSize: 14 }}>—</div>
                         )}
-                        <div style={{ color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 11 }}>
+                        <div style={{ color: 'var(--t-dim)', fontFamily: "'DM Mono', monospace", fontSize: 11 }}>
                           {row.org}
                         </div>
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         {isFinished ? (
                           <>
-                            <div style={{ color: medalColor === '#d4a017' ? '#d4a017' : '#e8e0c8', fontFamily: "'DM Mono', monospace", fontSize: 14, fontWeight: medalColor === '#d4a017' ? 700 : 400 }}>
+                            <div style={{ color: row.place === '1' ? 'var(--t-gold)' : 'var(--t-text2)', fontFamily: "'DM Mono', monospace", fontSize: 14, fontWeight: row.place === '1' ? 700 : 400 }}>
                               {row.time}
                             </div>
                             {row.delta && row.delta !== '.00' && (
-                              <div style={{ color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 11 }}>{row.delta}</div>
+                              <div style={{ color: 'var(--t-dim)', fontFamily: "'DM Mono', monospace", fontSize: 11 }}>{row.delta}</div>
                             )}
                           </>
                         ) : (
-                          <span style={{ color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>{row.status}</span>
+                          <span style={{ color: 'var(--t-dim)', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>{row.status}</span>
                         )}
                       </div>
-                      <div style={{ color: '#2d5a1b', fontFamily: "'DM Mono', monospace", fontSize: 11 }}>L{row.lane}</div>
+                      <div style={{ color: 'var(--t-vdim)', fontFamily: "'DM Mono', monospace", fontSize: 11 }}>L{row.lane}</div>
                     </div>
                   );
                 })}

@@ -46,9 +46,9 @@ export default function BellButton({ watchId, watchItem, size = 'md', label, var
     ? (watching ? (label.on ?? label) : (label.off ?? label))
     : null;
 
-  const notWatchingBg = variant === 'pill' ? 'rgba(212,160,23,0.08)' : 'transparent';
-  const notWatchingBorder = variant === 'pill' ? 'rgba(212,160,23,0.25)' : 'rgba(255,255,255,0.08)';
-  const notWatchingColor = variant === 'pill' ? '#d4a017' : undefined;
+  const notWatchingBg = variant === 'pill' ? 'var(--t-gold-d)' : 'transparent';
+  const notWatchingBorder = variant === 'pill' ? 'var(--t-gold-b)' : 'var(--t-border)';
+  const notWatchingColor = variant === 'pill' ? 'var(--t-gold)' : undefined;
 
   return (
     <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -56,9 +56,9 @@ export default function BellButton({ watchId, watchItem, size = 'md', label, var
         onClick={toggle}
         title={watching ? 'Stop watching' : 'Notify me when results are posted'}
         style={{
-          background: watching ? 'rgba(74,222,128,0.15)' : notWatchingBg,
-          border: `1px solid ${watching ? 'rgba(74,222,128,0.4)' : notWatchingBorder}`,
-          color: watching ? '#4ade80' : notWatchingColor,
+          background: watching ? 'var(--t-green-d)' : notWatchingBg,
+          border: `1px solid ${watching ? 'var(--t-green-b)' : notWatchingBorder}`,
+          color: watching ? 'var(--t-green)' : notWatchingColor,
           borderRadius: 7, padding: pad, cursor: 'pointer',
           fontSize: fs, lineHeight: 1, flexShrink: 0,
           opacity: watching ? 1 : 0.55, transition: 'all 0.2s',
@@ -74,10 +74,10 @@ export default function BellButton({ watchId, watchItem, size = 'md', label, var
       {tip && (
         <div style={{
           position: 'absolute', right: 0, top: 'calc(100% + 8px)',
-          background: '#0f220f', border: '1px solid #1e4a1e',
+          background: 'var(--t-bg-card)', border: '1px solid var(--t-border-s)',
           borderRadius: 10, padding: '12px 14px', width: 260, zIndex: 400,
-          color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif", fontSize: 13,
-          lineHeight: 1.5, boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+          color: 'var(--t-text2)', fontFamily: "'DM Sans', sans-serif", fontSize: 13,
+          lineHeight: 1.5, boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
           pointerEvents: 'none',
         }}>
           {TIPS[tip]}

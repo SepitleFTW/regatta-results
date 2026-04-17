@@ -3,6 +3,7 @@ import { toProxyUrl, parseEventList } from '../utils/proxy';
 import { showNotification } from '../utils/notifications';
 
 const STORAGE_KEY = 'regatta_watched';
+const HISTORY_KEY = 'regatta_notif_history';
 
 export function getWatched() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
@@ -27,6 +28,32 @@ export function removeWatched(id) {
 export function isWatched(id) {
   return getWatched().some(r => r.id === id);
 }
+
+// ── Notification history ──────────────────────────────────────────────────────
+
+export function getHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveToHistory(title, body, url) {
+  const history = getHistory();
+  const entry = { id: `h_${Date.now()}_${Math.random().toString(36).slice(2)}`, title, body, url, timestamp: Date.now(), read: false };
+  localStorage.setItem(HISTORY_KEY, JSON.stringify([entry, ...history].slice(0, 60)));
+  window.dispatchEvent(new Event('regatta-notif'));
+}
+
+export function markAllHistoryRead() {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(getHistory().map(h => ({ ...h, read: true }))));
+  window.dispatchEvent(new Event('regatta-notif'));
+}
+
+export function clearHistory() {
+  localStorage.removeItem(HISTORY_KEY);
+  window.dispatchEvent(new Event('regatta-notif'));
+}
+
+// ── Polling ───────────────────────────────────────────────────────────────────
 
 async function checkWatched(setAlerts) {
   const watched = getWatched().filter(r => !r.notified);
@@ -54,7 +81,9 @@ async function checkWatched(setAlerts) {
         const notifPath = item.detailsUrl
           ? `/results/${item.raceId || item.id}?event=${encodeURIComponent(item.detailsUrl)}`
           : `/results/${item.raceId || item.id}`;
+        const fullUrl = window.location.origin + notifPath;
         setAlerts(prev => [...prev, { id: item.id, name: item.name, raceId: item.raceId, url: item.url, eventDetailUrl: item.detailsUrl || null }]);
+        saveToHistory(`Results: ${item.name}`, '', fullUrl);
         showNotification(`Results: ${item.name}`, 'Results have been posted on Regatta Results SA.', notifPath);
         continue;
       }
@@ -74,19 +103,18 @@ async function checkWatched(setAlerts) {
       );
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 
-      // One alert banner + one push notification, listing the new events
       const names = newlyOfficial.map(e => e.eventName);
-      const label = names.length === 1
-        ? names[0]
-        : `${names[0]} + ${names.length - 1} more`;
+      const label = names.length === 1 ? names[0] : `${names[0]} + ${names.length - 1} more`;
 
       const alertId = `${item.id}__${Date.now()}`;
-      // When a single event goes Official, carry its detailsUrl so View → opens it directly
       const eventDetailUrl = newlyOfficial.length === 1 ? newlyOfficial[0].detailsUrl : null;
-      setAlerts(prev => [...prev, { id: alertId, name: `${label} — ${item.name}`, raceId: item.id, url: item.url, eventDetailUrl }]);
       const notifPath = eventDetailUrl
         ? `/results/${item.id}?event=${encodeURIComponent(eventDetailUrl)}`
         : `/results/${item.id}`;
+      const fullUrl = window.location.origin + notifPath;
+
+      setAlerts(prev => [...prev, { id: alertId, name: `${label} — ${item.name}`, raceId: item.id, url: item.url, eventDetailUrl }]);
+      saveToHistory(`Results: ${label}`, item.name, fullUrl);
       showNotification(`Results: ${label}`, item.name, notifPath);
     } catch {}
   }

@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { useIsMobile } from './hooks/useIsMobile';
 import { useResultsAlerts } from './hooks/useResultsAlerts';
+import { useTheme } from './contexts/ThemeContext';
 import OarIcon from './components/OarIcon';
 import HeroSection from './components/HeroSection';
 import ResultsBrowser from './components/ResultsBrowser';
@@ -15,6 +16,7 @@ import ChampionshipPoints from './components/ChampionshipPoints';
 import HallOfFame from './components/HallOfFame';
 import DonateSection from './components/DonateSection';
 import Footer from './components/Footer';
+import NotificationInbox from './components/NotificationInbox';
 
 const NAV_LINKS = [
   { label: 'Results', path: '/results' },
@@ -31,6 +33,7 @@ export default function App() {
   const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = useState(false);
   const { alerts, dismiss } = useResultsAlerts();
+  const { dark, toggle } = useTheme();
 
   const isHome = location.pathname === '/';
 
@@ -51,11 +54,11 @@ export default function App() {
   }
 
   return (
-    <div style={{ background: '#0a1a0a', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--t-bg)', minHeight: '100vh' }}>
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        background: 'rgba(3,10,3,0.88)', backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(26,58,26,0.6)',
+        background: 'var(--t-bg-nav)', backdropFilter: 'blur(16px)',
+        borderBottom: '1px solid var(--t-border)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 20px', height: 60,
       }}>
@@ -65,40 +68,62 @@ export default function App() {
         }}>
           <OarIcon />
           <span style={{
-            color: '#f5f0e0', fontFamily: "'Playfair Display', serif",
+            color: 'var(--t-text)', fontFamily: "'Playfair Display', serif",
             fontWeight: 700, fontSize: isMobile ? '0.85rem' : '1rem',
           }}>Regatta Results SA</span>
         </button>
 
         {isMobile ? (
-          <button
-            onClick={() => setMenuOpen(o => !o)}
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-            style={{
-              background: 'none', border: '1px solid rgba(26,58,26,0.8)',
-              borderRadius: 8, cursor: 'pointer', color: '#f5f0e0',
-              fontSize: 20, lineHeight: 1, padding: '6px 10px',
-              fontFamily: 'monospace',
-            }}
-          >
-            {menuOpen ? '✕' : '☰'}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <NotificationInbox />
+            <button
+              onClick={toggle}
+              title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+              style={{
+                background: 'none', border: '1px solid var(--t-border)',
+                borderRadius: 8, cursor: 'pointer', color: 'var(--t-muted)',
+                fontSize: 16, lineHeight: 1, padding: '5px 9px',
+              }}
+            >{dark ? '☀' : '☾'}</button>
+            <button
+              onClick={() => setMenuOpen(o => !o)}
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              style={{
+                background: 'none', border: '1px solid var(--t-border)',
+                borderRadius: 8, cursor: 'pointer', color: 'var(--t-text)',
+                fontSize: 20, lineHeight: 1, padding: '6px 10px',
+                fontFamily: 'monospace',
+              }}
+            >
+              {menuOpen ? '✕' : '☰'}
+            </button>
+          </div>
         ) : (
           <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
             {NAV_LINKS.map(({ label, path }) => {
               const active = location.pathname.startsWith(path);
               return (
                 <button key={path} onClick={() => navigate(path)} style={{
-                  background: active ? 'rgba(212,160,23,0.12)' : 'none',
-                  border: 'none', color: active ? '#d4a017' : '#6b7c6b',
+                  background: active ? 'var(--t-gold-d)' : 'none',
+                  border: 'none', color: active ? 'var(--t-gold)' : 'var(--t-muted)',
                   cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
                   padding: '6px 14px', borderRadius: 8, fontSize: 14, fontWeight: 500,
                 }}>{label}</button>
               );
             })}
+            <button
+              onClick={toggle}
+              title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+              style={{
+                background: 'none', border: '1px solid var(--t-border)',
+                borderRadius: 8, cursor: 'pointer', color: 'var(--t-muted)',
+                fontSize: 15, lineHeight: 1, padding: '6px 10px', marginLeft: 2,
+              }}
+            >{dark ? '☀' : '☾'}</button>
+            <NotificationInbox />
             <a href="#donate" onClick={handleDonateClick} style={{
-              background: 'rgba(212,160,23,0.12)', border: '1px solid rgba(212,160,23,0.3)',
-              color: '#d4a017', borderRadius: 8, padding: '6px 16px',
+              background: 'var(--t-gold-d)', border: '1px solid var(--t-gold-b)',
+              color: 'var(--t-gold)', borderRadius: 8, padding: '6px 16px',
               fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600,
               textDecoration: 'none', cursor: 'pointer', marginLeft: 4,
             }}>Donate</a>
@@ -110,16 +135,16 @@ export default function App() {
       {isMobile && menuOpen && (
         <div style={{
           position: 'fixed', top: 60, left: 0, right: 0, zIndex: 99,
-          background: 'rgba(3,10,3,0.97)', backdropFilter: 'blur(16px)',
-          borderBottom: '1px solid #1a3a1a',
+          background: 'var(--t-bg-nav)', backdropFilter: 'blur(16px)',
+          borderBottom: '1px solid var(--t-border-s)',
           padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 4,
         }}>
           {NAV_LINKS.map(({ label, path }) => {
             const active = location.pathname.startsWith(path);
             return (
               <button key={path} onClick={() => handleNavClick(path)} style={{
-                background: active ? 'rgba(212,160,23,0.12)' : 'none',
-                border: 'none', color: active ? '#d4a017' : '#e8e0c8',
+                background: active ? 'var(--t-gold-d)' : 'none',
+                border: 'none', color: active ? 'var(--t-gold)' : 'var(--t-text)',
                 cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
                 padding: '12px 16px', borderRadius: 8, fontSize: 15, fontWeight: 500,
                 textAlign: 'left',
@@ -127,8 +152,8 @@ export default function App() {
             );
           })}
           <a href="#donate" onClick={handleDonateClick} style={{
-            background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.3)',
-            color: '#d4a017', borderRadius: 8, padding: '12px 16px',
+            background: 'var(--t-gold-d)', border: '1px solid var(--t-gold-b)',
+            color: 'var(--t-gold)', borderRadius: 8, padding: '12px 16px',
             fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 600,
             textDecoration: 'none', cursor: 'pointer', marginTop: 4, display: 'block',
             textAlign: 'center',
@@ -145,17 +170,19 @@ export default function App() {
         }}>
           {alerts.map(a => (
             <div key={a.id} style={{
-              background: 'linear-gradient(135deg, #0a1a14, #0f220f)',
-              border: '1px solid rgba(74,222,128,0.5)',
+              background: dark
+                ? 'linear-gradient(135deg, #0a1a14, #0f220f)'
+                : 'linear-gradient(135deg, #f0fff4, #f5f2ea)',
+              border: '1px solid var(--t-green-b)',
               borderRadius: 10, padding: '10px 16px',
               display: 'flex', alignItems: 'center', gap: 12,
               pointerEvents: 'all',
-              boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
             }}>
-              <span style={{ color: '#4ade80', fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', flexShrink: 0 }}>
+              <span style={{ color: 'var(--t-green)', fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', flexShrink: 0 }}>
                 Results Live
               </span>
-              <span style={{ flex: 1, color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif", fontSize: 14 }}>{a.name}</span>
+              <span style={{ flex: 1, color: 'var(--t-text)', fontFamily: "'DM Sans', sans-serif", fontSize: 14 }}>{a.name}</span>
               <button onClick={() => {
                 const rId = a.raceId || a.id;
                 const path = a.eventDetailUrl
@@ -163,12 +190,12 @@ export default function App() {
                   : `/results/${rId}`;
                 navigate(path, { state: { race: { id: rId, name: a.name, url: a.url } } });
               }} style={{
-                background: '#4ade80', color: '#030a03', border: 'none', borderRadius: 6,
+                background: 'var(--t-green)', color: dark ? '#030a03' : '#fff', border: 'none', borderRadius: 6,
                 padding: '4px 14px', cursor: 'pointer',
                 fontFamily: "'DM Mono', monospace", fontSize: 11, fontWeight: 700,
               }}>View →</button>
               <button onClick={() => dismiss(a.id)} style={{
-                background: 'none', border: 'none', color: '#4a6b4a',
+                background: 'none', border: 'none', color: 'var(--t-dim)',
                 cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: '0 4px',
               }}>✕</button>
             </div>

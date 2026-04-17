@@ -14,7 +14,7 @@ function ShareButton({ title, text }) {
     if (navigator.share) {
       try {
         await navigator.share({ title, text, url });
-      } catch (_) { /* user dismissed */ }
+      } catch (_) {}
       return;
     }
     try {
@@ -26,9 +26,9 @@ function ShareButton({ title, text }) {
 
   return (
     <button onClick={handleShare} style={{
-      background: copied ? 'rgba(74,222,128,0.12)' : 'rgba(212,160,23,0.08)',
-      border: `1px solid ${copied ? 'rgba(74,222,128,0.3)' : 'rgba(212,160,23,0.25)'}`,
-      color: copied ? '#4ade80' : '#d4a017',
+      background: copied ? 'var(--t-green-d)' : 'var(--t-gold-d)',
+      border: `1px solid ${copied ? 'var(--t-green-b)' : 'var(--t-gold-b)'}`,
+      color: copied ? 'var(--t-green)' : 'var(--t-gold)',
       borderRadius: 8, padding: '6px 14px', cursor: 'pointer',
       fontFamily: "'DM Mono', monospace", fontSize: 12,
       letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 6,
@@ -38,7 +38,6 @@ function ShareButton({ title, text }) {
     </button>
   );
 }
-
 
 const PLACE_MEDAL = { '1': '#d4a017', '2': '#9ca3af', '3': '#a0522d' };
 
@@ -71,7 +70,7 @@ export default function RaceResultsPage() {
   const race = location.state?.race || findRaceById(raceId);
 
   const [events, setEvents] = useState([]);
-  const [eventSearch, setEventSearch] = useState("");
+  const [eventSearch, setEventSearch] = useState('');
   const [selectedDay, setSelectedDay] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -82,7 +81,7 @@ export default function RaceResultsPage() {
   const [resultsError, setResultsError] = useState(null);
   const [newEventIds, setNewEventIds] = useState(new Set());
   const [lastPoll, setLastPoll] = useState(null);
-  const [tick, setTick] = useState(0); // forces "X sec ago" to update
+  const [tick, setTick] = useState(0);
   const prevEventsRef = useRef(null);
 
   const days = [...new Set(events.map(e => e.date).filter(Boolean))];
@@ -99,13 +98,10 @@ export default function RaceResultsPage() {
     return evs;
   })();
 
-  // Scroll to top only when opening a specific event (has ?event= on mount).
-  // When refreshing the plain event list, we restore the saved position instead.
   useEffect(() => {
     if (mountEventId.current) window.scrollTo(0, 0);
   }, []);
 
-  // Restore event-list scroll after events finish loading (plain refresh, no ?event=)
   const listRestoredRef = useRef(false);
   const listScrollKey = `scroll:event-list:${raceId}`;
   useEffect(() => {
@@ -130,7 +126,6 @@ export default function RaceResultsPage() {
     return () => { cancelled = true; };
   }, [race?.url]);
 
-  // Seed prevEventsRef once events first load
   useEffect(() => {
     if (events.length > 0 && prevEventsRef.current === null) {
       prevEventsRef.current = events;
@@ -138,11 +133,9 @@ export default function RaceResultsPage() {
   }, [events]);
 
   // Auto-open event from ?event= URL param (refresh / shared link).
-  // Depends only on [events] — NOT on the live searchParam — so that openEvent()
-  // changing the URL never re-triggers this and accidentally opens the wrong heat.
   useEffect(() => {
     if (!mountEventId.current || events.length === 0 || autoOpenedRef.current) return;
-    const target = mountEventId.current; // detailsUrl (decoded) or legacy eventId
+    const target = mountEventId.current;
     const ev = events.find(e => (e.detailsUrl || e.eventId) === target);
     if (ev?.detailsUrl) {
       autoOpenedRef.current = true;
@@ -150,11 +143,9 @@ export default function RaceResultsPage() {
     }
   }, [events]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // isLive: regatta has started but has unfinished events
   const isLive = !loading && !error && events.length > 0 &&
     events.some(e => e.status !== 'Official');
 
-  // Auto-refresh every 60s while live
   useEffect(() => {
     if (!isLive || !race) return;
     const poll = () => {
@@ -189,7 +180,6 @@ export default function RaceResultsPage() {
     return () => clearInterval(id);
   }, [isLive, race?.url]);
 
-  // Tick every second so "updated Xs ago" stays current
   useEffect(() => {
     if (!isLive) return;
     const id = setInterval(() => setTick(t => t + 1), 1000);
@@ -197,7 +187,6 @@ export default function RaceResultsPage() {
   }, [isLive]);
 
   function openEvent(ev) {
-    // Save list position so we can restore it when going back
     sessionStorage.setItem(listScrollKey, String(Math.round(window.scrollY)));
     navigate(`/results/${raceId}?event=${evKey(ev)}`, { replace: true, state: location.state });
     setSelectedEvent(ev);
@@ -224,11 +213,11 @@ export default function RaceResultsPage() {
   if (!race) {
     return (
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '80px 24px', textAlign: 'center' }}>
-        <div style={{ color: '#6b7c6b', fontFamily: "'DM Sans', sans-serif", marginBottom: 24 }}>
+        <div style={{ color: 'var(--t-muted)', fontFamily: "'DM Sans', sans-serif", marginBottom: 24 }}>
           Race not found. It may have been fetched dynamically — go back and click it from the results list.
         </div>
         <button onClick={() => navigate('/results')} style={{
-          background: 'none', border: '1px solid #1a3a1a', color: '#d4a017', cursor: 'pointer',
+          background: 'none', border: '1px solid var(--t-border-s)', color: 'var(--t-gold)', cursor: 'pointer',
           fontFamily: "'DM Mono', monospace", fontSize: 12, letterSpacing: '0.12em',
           textTransform: 'uppercase', padding: '10px 20px', borderRadius: 8,
         }}>
@@ -261,7 +250,7 @@ export default function RaceResultsPage() {
           }
         }}
         style={{
-          background: 'none', border: 'none', color: '#d4a017', cursor: 'pointer',
+          background: 'none', border: 'none', color: 'var(--t-gold)', cursor: 'pointer',
           fontFamily: "'DM Mono', monospace", fontSize: 12, letterSpacing: '0.12em',
           textTransform: 'uppercase', padding: 0, marginBottom: 24,
           display: 'flex', alignItems: 'center', gap: 6,
@@ -273,7 +262,7 @@ export default function RaceResultsPage() {
       <div style={{ marginBottom: 32 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <h2 style={{
-            fontFamily: "'Playfair Display', serif", color: '#f5f0e0',
+            fontFamily: "'Playfair Display', serif", color: 'var(--t-text)',
             fontSize: 'clamp(1.4rem, 4vw, 2.2rem)', margin: '0 0 10px', flex: 1,
           }}>
             {selectedEvent ? selectedEvent.eventName : race.name}
@@ -291,13 +280,13 @@ export default function RaceResultsPage() {
           </div>
         </div>
         {selectedEvent && (
-          <p style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 13, margin: '0 0 10px' }}>
+          <p style={{ color: 'var(--t-gold)', fontFamily: "'DM Mono', monospace", fontSize: 13, margin: '0 0 10px' }}>
             {raceLabel}
           </p>
         )}
         <div style={{
           display: 'flex', gap: 20, flexWrap: 'wrap',
-          color: '#6b7c6b', fontFamily: "'DM Sans', sans-serif", fontSize: 13,
+          color: 'var(--t-muted)', fontFamily: "'DM Sans', sans-serif", fontSize: 13,
           alignItems: 'center',
         }}>
           {race.date && <span>📅 {race.date}</span>}
@@ -306,15 +295,15 @@ export default function RaceResultsPage() {
           {isLive && !selectedEvent && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{
-                width: 7, height: 7, borderRadius: '50%', background: '#4ade80',
+                width: 7, height: 7, borderRadius: '50%', background: 'var(--t-green)',
                 display: 'inline-block', animation: 'livePulse 1.8s ease-in-out infinite',
                 flexShrink: 0,
               }} />
-              <span style={{ color: '#4ade80', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              <span style={{ color: 'var(--t-green)', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
                 Live
               </span>
               {secsAgo !== null && (
-                <span style={{ color: '#2d5a1b', fontFamily: "'DM Mono', monospace", fontSize: 11 }}>
+                <span style={{ color: 'var(--t-vdim)', fontFamily: "'DM Mono', monospace", fontSize: 11 }}>
                   · {secsAgo < 5 ? 'just updated' : `updated ${secsAgo}s ago`}
                 </span>
               )}
@@ -326,30 +315,29 @@ export default function RaceResultsPage() {
       {/* Event list */}
       {!selectedEvent && (
         loading ? (
-          <div style={{ padding: '80px 0', textAlign: 'center', color: '#4a6b4a', fontFamily: "'DM Sans', sans-serif" }}>
+          <div style={{ padding: '80px 0', textAlign: 'center', color: 'var(--t-dim)', fontFamily: "'DM Sans', sans-serif" }}>
             Loading events…
           </div>
         ) : error ? (
           <div style={{
-            background: '#2d1b1b', border: '1px solid #7f1d1d', borderRadius: 12,
-            padding: 24, color: '#f87171', fontFamily: "'DM Sans', sans-serif",
+            background: 'var(--t-red-bg)', border: '1px solid var(--t-red-b)', borderRadius: 12,
+            padding: 24, color: 'var(--t-red)', fontFamily: "'DM Sans', sans-serif",
           }}>
             <div style={{ marginBottom: 12 }}>Could not load results: {error}</div>
             <a href={race.url} target="_blank" rel="noopener noreferrer"
-              style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>
+              style={{ color: 'var(--t-gold)', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>
               Open on regattaresults.co.za →
             </a>
           </div>
         ) : (
           <div>
-            {/* Day tabs — only shown for multi-day regattas */}
             {days.length > 1 && (
               <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                 {days.map(d => (
                   <button key={d} onClick={() => setSelectedDay(d)} style={{
-                    background: activeDay === d ? '#d4a017' : '#0f220f',
-                    color: activeDay === d ? '#030a03' : '#6b7c6b',
-                    border: activeDay === d ? 'none' : '1px solid #1a3a1a',
+                    background: activeDay === d ? 'var(--t-gold)' : 'var(--t-bg-card)',
+                    color: activeDay === d ? 'var(--t-bg-deep)' : 'var(--t-muted)',
+                    border: activeDay === d ? 'none' : '1px solid var(--t-border-s)',
                     borderRadius: 8, padding: '7px 20px', fontSize: 13, fontWeight: 700,
                     cursor: 'pointer', fontFamily: "'DM Mono', monospace", transition: 'all 0.15s',
                     whiteSpace: 'nowrap',
@@ -362,14 +350,14 @@ export default function RaceResultsPage() {
               onChange={e => setEventSearch(e.target.value)}
               placeholder="Search events…"
               style={{
-                background: '#0f220f', border: '1px solid #1a3a1a', borderRadius: 8,
-                padding: '10px 16px', color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif",
+                background: 'var(--t-bg-card)', border: '1px solid var(--t-border-s)', borderRadius: 8,
+                padding: '10px 16px', color: 'var(--t-text2)', fontFamily: "'DM Sans', sans-serif",
                 fontSize: 14, width: '100%', outline: 'none', marginBottom: 16,
                 boxSizing: 'border-box',
               }}
             />
             <p style={{
-              color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 11,
+              color: 'var(--t-dim)', fontFamily: "'DM Mono', monospace", fontSize: 11,
               letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 16,
             }}>
               {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}
@@ -382,29 +370,31 @@ export default function RaceResultsPage() {
                   <div key={i}
                     onClick={() => clickable && openEvent(ev)}
                     style={{
-                      background: isNew ? 'linear-gradient(145deg, #0a2016, #0a1a0a)' : 'linear-gradient(145deg, #0f220f, #0a1a0a)',
-                      border: `1px solid ${isNew ? 'rgba(74,222,128,0.5)' : '#1a3a1a'}`,
+                      background: isNew
+                        ? 'linear-gradient(145deg, var(--t-green-d), var(--t-bg))'
+                        : 'linear-gradient(145deg, var(--t-bg-card), var(--t-bg))',
+                      border: `1px solid ${isNew ? 'var(--t-green-b)' : 'var(--t-border-s)'}`,
                       borderRadius: 10,
                       padding: '14px 18px', cursor: clickable ? 'pointer' : 'default',
                       textAlign: 'left', display: 'flex', alignItems: 'center',
                       justifyContent: 'space-between', gap: 16,
                       opacity: clickable ? 1 : 0.5, transition: 'all 0.3s',
                     }}
-                    onMouseEnter={e => { if (clickable) { e.currentTarget.style.borderColor = isNew ? '#4ade80' : '#d4a017'; e.currentTarget.style.background = 'linear-gradient(145deg, #122612, #0d1d0d)'; } }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = isNew ? 'rgba(74,222,128,0.5)' : '#1a3a1a'; e.currentTarget.style.background = isNew ? 'linear-gradient(145deg, #0a2016, #0a1a0a)' : 'linear-gradient(145deg, #0f220f, #0a1a0a)'; }}
+                    onMouseEnter={e => { if (clickable) { e.currentTarget.style.borderColor = isNew ? 'var(--t-green)' : 'var(--t-gold)'; } }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = isNew ? 'var(--t-green-b)' : 'var(--t-border-s)'; }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
-                      <span style={{ color: '#2d5a1b', fontFamily: "'DM Mono', monospace", fontSize: 11, flexShrink: 0 }}>
+                      <span style={{ color: 'var(--t-vdim)', fontFamily: "'DM Mono', monospace", fontSize: 11, flexShrink: 0 }}>
                         #{ev.eventId}
                       </span>
                       <div style={{ minWidth: 0 }}>
                         <div style={{
-                          color: '#f5f0e0', fontFamily: "'Playfair Display', serif",
+                          color: 'var(--t-text)', fontFamily: "'Playfair Display', serif",
                           fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                         }}>
                           {ev.eventName}
                         </div>
-                        <div style={{ color: '#6b7c6b', fontFamily: "'DM Sans', sans-serif", fontSize: 12, marginTop: 2 }}>
+                        <div style={{ color: 'var(--t-muted)', fontFamily: "'DM Sans', sans-serif", fontSize: 12, marginTop: 2 }}>
                           {ev.race}
                         </div>
                       </div>
@@ -412,12 +402,12 @@ export default function RaceResultsPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flexShrink: 0 }}>
                       {isNew && (
                         <span style={{
-                          color: '#4ade80', fontFamily: "'DM Mono', monospace", fontSize: 9,
-                          letterSpacing: '0.15em', background: 'rgba(74,222,128,0.1)',
-                          border: '1px solid rgba(74,222,128,0.3)', borderRadius: 4, padding: '2px 6px',
+                          color: 'var(--t-green)', fontFamily: "'DM Mono', monospace", fontSize: 9,
+                          letterSpacing: '0.15em', background: 'var(--t-green-d)',
+                          border: '1px solid var(--t-green-b)', borderRadius: 4, padding: '2px 6px',
                         }}>NEW</span>
                       )}
-                      {!isMobile && <span style={{ color: '#6b7c6b', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>{ev.time}</span>}
+                      {!isMobile && <span style={{ color: 'var(--t-muted)', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>{ev.time}</span>}
                       <StatusBadge status={ev.status === 'Official' ? 'Official' : 'Scheduled'} />
                       {ev.status !== 'Official' && clickable && (
                         <BellButton
@@ -427,8 +417,8 @@ export default function RaceResultsPage() {
                         />
                       )}
                       {clickable
-                        ? <span style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 13 }}>→</span>
-                        : <span style={{ color: '#2d5a1b', fontFamily: "'DM Mono', monospace", fontSize: 10 }}>TBA</span>
+                        ? <span style={{ color: 'var(--t-gold)', fontFamily: "'DM Mono', monospace", fontSize: 13 }}>→</span>
+                        : <span style={{ color: 'var(--t-vdim)', fontFamily: "'DM Mono', monospace", fontSize: 10 }}>TBA</span>
                       }
                     </div>
                   </div>
@@ -442,73 +432,71 @@ export default function RaceResultsPage() {
       {/* Individual event results */}
       {selectedEvent && (
         resultsLoading ? (
-          <div style={{ padding: '80px 0', textAlign: 'center', color: '#4a6b4a', fontFamily: "'DM Sans', sans-serif" }}>
+          <div style={{ padding: '80px 0', textAlign: 'center', color: 'var(--t-dim)', fontFamily: "'DM Sans', sans-serif" }}>
             Loading results…
           </div>
         ) : resultsError ? (
           <div style={{
-            background: '#2d1b1b', border: '1px solid #7f1d1d', borderRadius: 12,
-            padding: 24, color: '#f87171', fontFamily: "'DM Sans', sans-serif",
+            background: 'var(--t-red-bg)', border: '1px solid var(--t-red-b)', borderRadius: 12,
+            padding: 24, color: 'var(--t-red)', fontFamily: "'DM Sans', sans-serif",
           }}>
             Could not load results: {resultsError}
           </div>
         ) : entries ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {/* Lane draw banner */}
             <div style={{
-              background: 'linear-gradient(135deg, #0a1a14, #0f220f)',
-              border: '1px solid #1a3a2a', borderLeft: '3px solid #4ade80',
+              background: 'linear-gradient(135deg, var(--t-green-d), var(--t-bg-card))',
+              border: '1px solid var(--t-green-b)', borderLeft: '3px solid var(--t-green)',
               borderRadius: 10, padding: '10px 16px',
               display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4,
             }}>
-              <span style={{ color: '#4ade80', fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', flexShrink: 0 }}>
+              <span style={{ color: 'var(--t-green)', fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', flexShrink: 0 }}>
                 Lane Draw
               </span>
-              <span style={{ color: '#6b7c6b', fontFamily: "'DM Sans', sans-serif", fontSize: 13 }}>
+              <span style={{ color: 'var(--t-muted)', fontFamily: "'DM Sans', sans-serif", fontSize: 13 }}>
                 Results not yet posted
               </span>
             </div>
-            {/* Progression rules */}
             {selectedEvent.progression && selectedEvent.progression.toLowerCase() !== 'final only' && (
               <div style={{
-                background: 'linear-gradient(135deg, #0f1e0a, #0a1a14)',
-                border: '1px solid #1a3a2a', borderLeft: '3px solid #d4a017',
+                background: 'linear-gradient(135deg, var(--t-gold-d), var(--t-bg-card))',
+                border: '1px solid var(--t-gold-b)', borderLeft: '3px solid var(--t-gold)',
                 borderRadius: 10, padding: '10px 16px',
                 display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4,
               }}>
-                <span style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', flexShrink: 0 }}>
+                <span style={{ color: 'var(--t-gold)', fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', flexShrink: 0 }}>
                   Progression
                 </span>
-                <span style={{ color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif", fontSize: 13 }}>
+                <span style={{ color: 'var(--t-text2)', fontFamily: "'DM Sans', sans-serif", fontSize: 13 }}>
                   {selectedEvent.progression}
                 </span>
               </div>
             )}
             {entries.map((entry, i) => (
               <div key={i} style={{
-                background: 'linear-gradient(145deg, #0f220f, #0a1a0a)',
-                border: '1px solid #1a3a1a', borderRadius: 10,
+                background: 'linear-gradient(145deg, var(--t-bg-card), var(--t-bg))',
+                border: '1px solid var(--t-border-s)', borderRadius: 10,
                 padding: isMobile ? '12px 14px' : '14px 18px',
                 display: 'flex', alignItems: 'flex-start', gap: 14,
               }}>
                 <div style={{
                   width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-                  background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.3)',
+                  background: 'var(--t-gold-d)', border: '1px solid var(--t-gold-b)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 12, fontWeight: 700,
+                  color: 'var(--t-gold)', fontFamily: "'DM Mono', monospace", fontSize: 12, fontWeight: 700,
                 }}>
                   {entry.lane}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
-                    color: '#f5f0e0', fontFamily: "'DM Sans', sans-serif",
+                    color: 'var(--t-text)', fontFamily: "'DM Sans', sans-serif",
                     fontSize: isMobile ? 13 : 14, fontWeight: 600, marginBottom: 3,
                   }}>
                     {entry.org}
                   </div>
                   {entry.athletes && (
                     <div style={{
-                      color: '#4a6b4a', fontFamily: "'DM Sans', sans-serif",
+                      color: 'var(--t-dim)', fontFamily: "'DM Sans', sans-serif",
                       fontSize: 12, lineHeight: 1.5,
                     }}>
                       {entry.athletes}
@@ -520,19 +508,18 @@ export default function RaceResultsPage() {
           </div>
         ) : results ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {/* Progression banner */}
             {selectedEvent.progression && selectedEvent.progression.toLowerCase() !== 'final only' && (
               <div style={{
-                background: 'linear-gradient(135deg, #0f1e0a, #0a1a14)',
-                border: '1px solid #1a3a2a',
-                borderLeft: '3px solid #d4a017',
+                background: 'linear-gradient(135deg, var(--t-gold-d), var(--t-bg-card))',
+                border: '1px solid var(--t-gold-b)',
+                borderLeft: '3px solid var(--t-gold)',
                 borderRadius: 10, padding: '10px 16px',
                 display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4,
               }}>
-                <span style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', flexShrink: 0 }}>
+                <span style={{ color: 'var(--t-gold)', fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase', flexShrink: 0 }}>
                   Progression
                 </span>
-                <span style={{ color: '#e8e0c8', fontFamily: "'DM Sans', sans-serif", fontSize: 13 }}>
+                <span style={{ color: 'var(--t-text2)', fontFamily: "'DM Sans', sans-serif", fontSize: 13 }}>
                   {selectedEvent.progression}
                 </span>
               </div>
@@ -546,17 +533,19 @@ export default function RaceResultsPage() {
 
               return (
                 <div key={i} style={{
-                  background: isFirst ? 'linear-gradient(145deg, #1c1600, #0f220f)' : 'linear-gradient(145deg, #0f220f, #0a1a0a)',
-                  border: `1px solid ${isFirst ? '#3d2e00' : '#1a3a1a'}`,
+                  background: isFirst
+                    ? 'linear-gradient(145deg, var(--t-gold-row), var(--t-bg-card))'
+                    : 'linear-gradient(145deg, var(--t-bg-card), var(--t-bg))',
+                  border: `1px solid ${isFirst ? 'var(--t-gold-row-b)' : 'var(--t-border-s)'}`,
                   borderRadius: 10, padding: isMobile ? '12px 12px' : '14px 18px',
                   display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16,
                 }}>
                   <div style={{
                     width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
                     background: isFinished && medalColor ? `${medalColor}18` : 'transparent',
-                    border: `2px solid ${isFinished ? (medalColor || '#1a3a1a') : '#2d1b1b'}`,
+                    border: `2px solid ${isFinished ? (medalColor || 'var(--t-border-s)') : 'var(--t-red-b)'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: isFinished ? (medalColor || '#4a6b4a') : '#4a6b4a',
+                    color: isFinished ? (medalColor || 'var(--t-dim)') : 'var(--t-dim)',
                     fontFamily: "'DM Mono', monospace", fontWeight: 700, fontSize: 12,
                   }}>
                     {isFinished ? row.place : '–'}
@@ -564,13 +553,13 @@ export default function RaceResultsPage() {
 
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
-                      color: '#f5f0e0', fontFamily: "'DM Sans', sans-serif",
+                      color: 'var(--t-text)', fontFamily: "'DM Sans', sans-serif",
                       fontSize: isMobile ? 13 : 14, fontWeight: 600, marginBottom: 2,
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
                       {row.athlete || '—'}
                     </div>
-                    <div style={{ color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: '0.04em' }}>
+                    <div style={{ color: 'var(--t-dim)', fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: '0.04em' }}>
                       {row.org}
                     </div>
                   </div>
@@ -579,26 +568,26 @@ export default function RaceResultsPage() {
                     {isFinished ? (
                       <>
                         <div style={{
-                          color: isFirst ? '#d4a017' : '#e8e0c8',
+                          color: isFirst ? 'var(--t-gold)' : 'var(--t-text2)',
                           fontFamily: "'DM Mono', monospace",
                           fontSize: 15, fontWeight: isFirst ? 700 : 400,
                         }}>
                           {row.time}
                         </div>
                         {row.delta && row.delta !== '.00' && (
-                          <div style={{ color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>
+                          <div style={{ color: 'var(--t-dim)', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>
                             {row.delta}
                           </div>
                         )}
                       </>
                     ) : (
-                      <span style={{ color: '#4a6b4a', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>
+                      <span style={{ color: 'var(--t-dim)', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>
                         {row.status}
                       </span>
                     )}
                   </div>
 
-                  <div style={{ color: '#2d5a1b', fontFamily: "'DM Mono', monospace", fontSize: 11, textAlign: 'center', flexShrink: 0 }}>
+                  <div style={{ color: 'var(--t-vdim)', fontFamily: "'DM Mono', monospace", fontSize: 11, textAlign: 'center', flexShrink: 0 }}>
                     L{row.lane}
                   </div>
                 </div>
