@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { toProxyUrl, parseEventList } from '../utils/proxy';
 import { showNotification } from '../utils/notifications';
+import { putWatchedIdb } from '../utils/watchedDb';
 
 const STORAGE_KEY = 'regatta_watched';
 const HISTORY_KEY = 'regatta_notif_history';
+
+function syncIdb(items) { putWatchedIdb(items); }
 
 export function getWatched() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
@@ -13,16 +16,16 @@ export function getWatched() {
 export function addWatched(item) {
   const list = getWatched();
   if (!list.find(r => r.id === item.id)) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([
-      ...list,
-      { notifiedEvents: [], notified: false, ...item },
-    ]));
+    const next = [...list, { notifiedEvents: [], notified: false, ...item }];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    syncIdb(next);
   }
 }
 
 export function removeWatched(id) {
-  const list = getWatched().filter(r => r.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  const next = getWatched().filter(r => r.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  syncIdb(next);
 }
 
 export function isWatched(id) {
@@ -78,6 +81,7 @@ async function checkWatched(setAlerts) {
           r.id === item.id ? { ...r, notified: true } : r
         );
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        syncIdb(updated);
         const notifPath = item.detailsUrl
           ? `/results/${item.raceId || item.id}?event=${encodeURIComponent(item.detailsUrl)}`
           : `/results/${item.raceId || item.id}`;
@@ -102,6 +106,7 @@ async function checkWatched(setAlerts) {
         r.id === item.id ? { ...r, notifiedEvents: updatedNotified, notified: allDone } : r
       );
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      syncIdb(updated);
 
       const names = newlyOfficial.map(e => e.eventName);
       const label = names.length === 1 ? names[0] : `${names[0]} + ${names.length - 1} more`;

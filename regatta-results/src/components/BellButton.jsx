@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { addWatched, removeWatched, isWatched } from '../hooks/useResultsAlerts';
-import { isIos, isPwa, requestPermission } from '../utils/notifications';
+import { isIos, isPwa, requestPermission, subscribeToPush } from '../utils/notifications';
 
 const TIPS = {
   ios: '📱 Tap Share → "Add to Home Screen" in Safari, then open the app from your home screen to enable notifications.',
@@ -36,6 +36,8 @@ export default function BellButton({ watchId, watchItem, size = 'md', label, var
     if (perm !== 'granted') {
       setTip('denied');
       setTimeout(() => setTip(null), 8000);
+    } else {
+      subscribeToPush();
     }
   }
 

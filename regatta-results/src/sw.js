@@ -3,6 +3,8 @@ import { clientsClaim } from 'workbox-core';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate, CacheFirst } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
+import { getWatchedIdb, putWatchedIdb } from './utils/watchedDb';
+import { parseEventList } from './utils/proxy';
 
 clientsClaim();
 
@@ -33,6 +35,78 @@ registerRoute(
     plugins: [new ExpirationPlugin({ maxAgeSeconds: 60 * 60 * 24 * 365 })],
   })
 );
+
+// ── Background push: wake ping received → check watched regattas ──────────────
+
+self.addEventListener('push', event => {
+  event.waitUntil(checkAllWatched());
+});
+
+async function checkAllWatched() {
+  const watched = await getWatchedIdb();
+  const toCheck = watched.filter(r => !r.notified);
+  if (!toCheck.length) return;
+
+  const updated = watched.map(r => ({ ...r }));
+  const origin = self.registration.scope.replace(/\/$/, '');
+
+  for (const item of toCheck) {
+    try {
+      const proxyPath = item.url.replace(/^https?:\/\/(www\.)?regattaresults\.co\.za/, '/rr-proxy');
+      const fetchUrl = origin + proxyPath;
+      const res = await fetch(fetchUrl);
+      if (!res.ok) continue;
+      const html = await res.text();
+      const events = parseEventList(html, fetchUrl);
+
+      if (item.eventId) {
+        const ev = item.detailsUrl
+          ? events.find(e => e.detailsUrl === item.detailsUrl)
+          : events.find(e => e.eventId === item.eventId);
+        if (ev?.status !== 'Official') continue;
+
+        const idx = updated.findIndex(r => r.id === item.id);
+        if (idx >= 0) updated[idx] = { ...updated[idx], notified: true };
+
+        const notifPath = item.detailsUrl
+          ? `/results/${item.raceId || item.id}?event=${encodeURIComponent(item.detailsUrl)}`
+          : `/results/${item.raceId || item.id}`;
+        await self.registration.showNotification(`Results: ${item.name}`, {
+          body: 'Results have been posted.',
+          icon: '/favicon.svg',
+          badge: '/favicon.svg',
+          data: { url: origin + notifPath },
+        });
+        continue;
+      }
+
+      const alreadyNotified = new Set(item.notifiedEvents || []);
+      const newlyOfficial = events.filter(e => e.status === 'Official' && !alreadyNotified.has(e.eventId));
+      if (!newlyOfficial.length) continue;
+
+      const updatedNotified = [...alreadyNotified, ...newlyOfficial.map(e => e.eventId)];
+      const allDone = events.every(e => e.status === 'Official');
+      const idx = updated.findIndex(r => r.id === item.id);
+      if (idx >= 0) updated[idx] = { ...updated[idx], notifiedEvents: updatedNotified, notified: allDone };
+
+      const names = newlyOfficial.map(e => e.eventName);
+      const label = names.length === 1 ? names[0] : `${names[0]} + ${names.length - 1} more`;
+      const eventDetailUrl = newlyOfficial.length === 1 ? newlyOfficial[0].detailsUrl : null;
+      const notifPath = eventDetailUrl
+        ? `/results/${item.id}?event=${encodeURIComponent(eventDetailUrl)}`
+        : `/results/${item.id}`;
+
+      await self.registration.showNotification(`Results: ${label}`, {
+        body: item.name,
+        icon: '/favicon.svg',
+        badge: '/favicon.svg',
+        data: { url: origin + notifPath },
+      });
+    } catch {}
+  }
+
+  await putWatchedIdb(updated);
+}
 
 // Navigate to the race page when a push notification is tapped
 self.addEventListener('notificationclick', event => {
