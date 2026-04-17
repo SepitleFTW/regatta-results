@@ -50,7 +50,7 @@ async function checkWatched(setAlerts) {
         );
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
         setAlerts(prev => [...prev, { id: item.id, name: item.name, raceId: item.raceId, url: item.url }]);
-        showNotification(`Results: ${item.name}`, 'Results have been posted on Regatta Results SA.');
+        showNotification(`Results: ${item.name}`, 'Results have been posted on Regatta Results SA.', `/results/${item.raceId || item.id}`);
         continue;
       }
 
@@ -77,7 +77,7 @@ async function checkWatched(setAlerts) {
 
       const alertId = `${item.id}__${Date.now()}`;
       setAlerts(prev => [...prev, { id: alertId, name: `${label} — ${item.name}`, raceId: item.id, url: item.url }]);
-      showNotification(`Results: ${label}`, item.name);
+      showNotification(`Results: ${label}`, item.name, `/results/${item.id}`);
     } catch {}
   }
 }
