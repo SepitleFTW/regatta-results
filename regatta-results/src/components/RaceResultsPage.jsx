@@ -50,6 +50,14 @@ function findRaceById(id) {
   return null;
 }
 
+// eventId (first table column) is shared by all heats of the same event.
+// Use the second-to-last path segment of detailsUrl instead — it's unique per heat.
+function evKey(ev) {
+  if (!ev.detailsUrl) return ev.eventId;
+  const parts = ev.detailsUrl.split('/').filter(Boolean);
+  return parts.length >= 2 ? parts[parts.length - 2] : ev.eventId;
+}
+
 export default function RaceResultsPage() {
   const { raceId } = useParams();
   const location = useLocation();
@@ -118,7 +126,7 @@ export default function RaceResultsPage() {
   // Auto-open event from ?event= URL param (for shared links)
   useEffect(() => {
     if (!initialEventId || events.length === 0 || autoOpenedRef.current) return;
-    const ev = events.find(e => e.eventId === initialEventId);
+    const ev = events.find(e => evKey(e) === initialEventId);
     if (ev?.detailsUrl) {
       autoOpenedRef.current = true;
       openEvent(ev);
@@ -172,7 +180,7 @@ export default function RaceResultsPage() {
   }, [isLive]);
 
   function openEvent(ev) {
-    navigate(`/results/${raceId}?event=${ev.eventId}`, { replace: true, state: location.state });
+    navigate(`/results/${raceId}?event=${evKey(ev)}`, { replace: true, state: location.state });
     setSelectedEvent(ev);
     setResults(null);
     setEntries(null);
