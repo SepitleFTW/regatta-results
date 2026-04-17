@@ -421,8 +421,8 @@ export default function RaceResultsPage() {
                       <StatusBadge status={ev.status === 'Official' ? 'Official' : 'Scheduled'} />
                       {ev.status !== 'Official' && clickable && (
                         <BellButton
-                          watchId={`${race.id}__${ev.eventId}`}
-                          watchItem={{ name: `${ev.eventName} — ${race.name}`, url: race.url, eventId: ev.eventId, raceId: race.id }}
+                          watchId={`${race.id}__${encodeURIComponent(ev.detailsUrl || ev.eventId)}`}
+                          watchItem={{ name: `${ev.eventName} — ${race.name}`, url: race.url, detailsUrl: ev.detailsUrl, eventId: ev.eventId, raceId: race.id }}
                           size="sm"
                         />
                       )}

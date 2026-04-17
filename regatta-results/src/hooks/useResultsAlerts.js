@@ -40,17 +40,22 @@ async function checkWatched(setAlerts) {
       const html = await res.text();
       const events = parseEventList(html, proxyUrl);
 
-      // ── Event-level watch: fire once when that specific event is Official ──
+      // ── Event-level watch: fire once when that specific heat is Official ──
       if (item.eventId) {
-        const ev = events.find(e => e.eventId === item.eventId);
+        const ev = item.detailsUrl
+          ? events.find(e => e.detailsUrl === item.detailsUrl)
+          : events.find(e => e.eventId === item.eventId);
         if (ev?.status !== 'Official') continue;
 
         const updated = getWatched().map(r =>
           r.id === item.id ? { ...r, notified: true } : r
         );
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        setAlerts(prev => [...prev, { id: item.id, name: item.name, raceId: item.raceId, url: item.url }]);
-        showNotification(`Results: ${item.name}`, 'Results have been posted on Regatta Results SA.', `/results/${item.raceId || item.id}`);
+        const notifPath = item.detailsUrl
+          ? `/results/${item.raceId || item.id}?event=${encodeURIComponent(item.detailsUrl)}`
+          : `/results/${item.raceId || item.id}`;
+        setAlerts(prev => [...prev, { id: item.id, name: item.name, raceId: item.raceId, url: item.url, eventDetailUrl: item.detailsUrl || null }]);
+        showNotification(`Results: ${item.name}`, 'Results have been posted on Regatta Results SA.', notifPath);
         continue;
       }
 
