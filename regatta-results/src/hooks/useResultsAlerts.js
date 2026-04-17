@@ -49,7 +49,7 @@ async function checkWatched(setAlerts) {
       const updated = getWatched().map(r => r.id === item.id ? { ...r, notified: true } : r);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 
-      setAlerts(prev => [...prev, { id: item.id, name: item.name, raceId: item.raceId }]);
+      setAlerts(prev => [...prev, { id: item.id, name: item.name, raceId: item.raceId, url: item.url }]);
 
       showNotification(`Results live: ${item.name}`, 'Results have been posted on Regatta Results SA.');
     } catch {}

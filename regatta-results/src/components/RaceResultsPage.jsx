@@ -271,9 +271,9 @@ export default function RaceResultsPage() {
           color: '#6b7c6b', fontFamily: "'DM Sans', sans-serif", fontSize: 13,
           alignItems: 'center',
         }}>
-          <span>📅 {race.date}</span>
-          <span>📍 {race.location}</span>
-          <StatusBadge status={race.status} />
+          {race.date && <span>📅 {race.date}</span>}
+          {race.location && <span>📍 {race.location}</span>}
+          {race.status && <StatusBadge status={race.status} />}
           {isLive && !selectedEvent && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{
