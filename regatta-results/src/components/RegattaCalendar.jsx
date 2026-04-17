@@ -4,6 +4,37 @@ import { REGATTAS } from '../data/regattas';
 import StatusBadge from './StatusBadge';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useWeather } from '../hooks/useWeather';
+import { addWatched, removeWatched, isWatched } from '../hooks/useResultsAlerts';
+
+function BellButton({ race }) {
+  const [watching, setWatching] = useState(() => isWatched(race.id));
+  function toggle(e) {
+    e.stopPropagation();
+    if (watching) {
+      removeWatched(race.id);
+      setWatching(false);
+    } else {
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+      addWatched(race);
+      setWatching(true);
+    }
+  }
+  return (
+    <button
+      onClick={toggle}
+      title={watching ? 'Stop watching' : 'Notify me when results are posted'}
+      style={{
+        background: watching ? 'rgba(74,222,128,0.15)' : 'transparent',
+        border: `1px solid ${watching ? 'rgba(74,222,128,0.4)' : 'rgba(255,255,255,0.08)'}`,
+        borderRadius: 7, padding: '4px 7px', cursor: 'pointer',
+        fontSize: 13, lineHeight: 1, flexShrink: 0,
+        opacity: watching ? 1 : 0.45, transition: 'all 0.2s',
+      }}
+    >🔔</button>
+  );
+}
 
 function WeatherBadge({ location }) {
   const weather = useWeather(location);
@@ -168,6 +199,7 @@ export default function RegattaCalendar() {
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                         {isUpcoming && r.location && <WeatherBadge location={r.location} />}
+                        {isUpcoming && <BellButton race={r} />}
                         <StatusBadge status={r.status} />
                         <span style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 13 }}>→</span>
                       </div>

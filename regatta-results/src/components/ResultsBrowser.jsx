@@ -3,6 +3,37 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import StatusBadge from './StatusBadge';
 import { YEARS, PROVINCES, REGATTAS } from '../data/regattas';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { addWatched, removeWatched, isWatched } from '../hooks/useResultsAlerts';
+
+function BellButton({ race }) {
+  const [watching, setWatching] = useState(() => isWatched(race.id));
+  function toggle(e) {
+    e.stopPropagation();
+    if (watching) {
+      removeWatched(race.id);
+      setWatching(false);
+    } else {
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+      addWatched(race);
+      setWatching(true);
+    }
+  }
+  return (
+    <button
+      onClick={toggle}
+      title={watching ? 'Stop watching' : 'Notify me when results are posted'}
+      style={{
+        background: watching ? 'rgba(74,222,128,0.15)' : 'transparent',
+        border: `1px solid ${watching ? 'rgba(74,222,128,0.4)' : 'rgba(255,255,255,0.08)'}`,
+        borderRadius: 7, padding: '5px 8px', cursor: 'pointer',
+        fontSize: 14, lineHeight: 1, flexShrink: 0,
+        opacity: watching ? 1 : 0.45, transition: 'all 0.2s',
+      }}
+    >🔔</button>
+  );
+}
 
 // Some years use non-standard slugs on regattaresults.co.za
 const YEAR_SLUGS = {
@@ -176,10 +207,11 @@ export default function ResultsBrowser() {
                       {r.date && <span>📅 {r.date}</span>}
                       {r.location && <span>📍 {r.location}</span>}
                     </div>
-                    <div style={{ marginTop: 16 }}>
+                    <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <span style={{ color: "#d4a017", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>
                         {r.status === "Upcoming" ? "View lane draw →" : "View results →"}
                       </span>
+                      {r.status === "Upcoming" && <BellButton race={r} />}
                     </div>
                   </div>
                 </div>
