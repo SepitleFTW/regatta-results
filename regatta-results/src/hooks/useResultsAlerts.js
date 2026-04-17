@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toProxyUrl, parseEventList } from '../utils/proxy';
+import { showNotification } from '../utils/notifications';
 
 const STORAGE_KEY = 'regatta_watched';
 
@@ -50,12 +51,7 @@ async function checkWatched(setAlerts) {
 
       setAlerts(prev => [...prev, { id: item.id, name: item.name, raceId: item.raceId }]);
 
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(`Results live: ${item.name}`, {
-          body: 'Results have been posted on Regatta Results SA.',
-          icon: '/favicon.ico',
-        });
-      }
+      showNotification(`Results live: ${item.name}`, 'Results have been posted on Regatta Results SA.');
     } catch {}
   }
 }

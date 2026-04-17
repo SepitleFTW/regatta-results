@@ -4,44 +4,7 @@ import StatusBadge from './StatusBadge';
 import { toProxyUrl, parseEventList, parseEventResults, parseEntryList } from '../utils/proxy';
 import { REGATTAS } from '../data/regattas';
 import { useIsMobile } from '../hooks/useIsMobile';
-import { addWatched, removeWatched, isWatched } from '../hooks/useResultsAlerts';
-
-function EventBellButton({ race, ev }) {
-  const watchId = `${race.id}__${ev.eventId}`;
-  const [watching, setWatching] = useState(() => isWatched(watchId));
-  function toggle(e) {
-    e.stopPropagation();
-    if (watching) {
-      removeWatched(watchId);
-      setWatching(false);
-    } else {
-      if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
-      }
-      addWatched({
-        id: watchId,
-        name: `${ev.eventName} — ${race.name}`,
-        url: race.url,
-        eventId: ev.eventId,
-        raceId: race.id,
-      });
-      setWatching(true);
-    }
-  }
-  return (
-    <button
-      onClick={toggle}
-      title={watching ? 'Stop watching' : 'Notify me when results are posted'}
-      style={{
-        background: watching ? 'rgba(74,222,128,0.15)' : 'transparent',
-        border: `1px solid ${watching ? 'rgba(74,222,128,0.4)' : 'rgba(255,255,255,0.08)'}`,
-        borderRadius: 7, padding: '3px 6px', cursor: 'pointer',
-        fontSize: 12, lineHeight: 1, flexShrink: 0,
-        opacity: watching ? 1 : 0.4, transition: 'all 0.2s',
-      }}
-    >🔔</button>
-  );
-}
+import BellButton from './BellButton';
 
 function ShareButton({ title, text }) {
   const [copied, setCopied] = useState(false);
@@ -76,36 +39,6 @@ function ShareButton({ title, text }) {
   );
 }
 
-function WatchButton({ race }) {
-  const [watched, setWatched] = useState(() => isWatched(race.id));
-
-  function toggle() {
-    if (watched) {
-      removeWatched(race.id);
-      setWatched(false);
-    } else {
-      if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
-      }
-      addWatched(race);
-      setWatched(true);
-    }
-  }
-
-  return (
-    <button onClick={toggle} style={{
-      background: watched ? 'rgba(74,222,128,0.1)' : 'rgba(212,160,23,0.08)',
-      border: `1px solid ${watched ? 'rgba(74,222,128,0.3)' : 'rgba(212,160,23,0.25)'}`,
-      color: watched ? '#4ade80' : '#d4a017',
-      borderRadius: 8, padding: '6px 14px', cursor: 'pointer',
-      fontFamily: "'DM Mono', monospace", fontSize: 12,
-      letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 6,
-      transition: 'all 0.2s', whiteSpace: 'nowrap', flexShrink: 0,
-    }}>
-      {watched ? '🔔 Watching' : '🔔 Notify me'}
-    </button>
-  );
-}
 
 const PLACE_MEDAL = { '1': '#d4a017', '2': '#9ca3af', '3': '#a0522d' };
 
@@ -318,7 +251,7 @@ export default function RaceResultsPage() {
           </h2>
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             {race.status === 'Upcoming' && !selectedEvent && (
-              <WatchButton race={race} />
+              <BellButton watchId={race.id} watchItem={race} variant="pill" label={{ on: ' Watching', off: ' Notify me' }} size="lg" />
             )}
             <ShareButton
               title={selectedEvent ? selectedEvent.eventName : race.name}
@@ -458,7 +391,11 @@ export default function RaceResultsPage() {
                       {!isMobile && <span style={{ color: '#6b7c6b', fontFamily: "'DM Mono', monospace", fontSize: 12 }}>{ev.time}</span>}
                       <StatusBadge status={ev.status === 'Official' ? 'Official' : 'Scheduled'} />
                       {ev.status !== 'Official' && clickable && (
-                        <EventBellButton race={race} ev={ev} />
+                        <BellButton
+                          watchId={`${race.id}__${ev.eventId}`}
+                          watchItem={{ name: `${ev.eventName} — ${race.name}`, url: race.url, eventId: ev.eventId, raceId: race.id }}
+                          size="sm"
+                        />
                       )}
                       {clickable
                         ? <span style={{ color: '#d4a017', fontFamily: "'DM Mono', monospace", fontSize: 13 }}>→</span>
