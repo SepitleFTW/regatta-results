@@ -1,7 +1,7 @@
 import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from 'workbox-precaching';
 import { clientsClaim } from 'workbox-core';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
-import { StaleWhileRevalidate, CacheFirst } from 'workbox-strategies';
+import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { getWatchedIdb, putWatchedIdb } from './utils/watchedDb';
 import { parseEventList } from './utils/proxy';
@@ -20,6 +20,15 @@ const navHandler = createHandlerBoundToURL('/index.html');
 registerRoute(new NavigationRoute(navHandler, {
   denylist: [/^\/rr-proxy/, /^\/api/],
 }));
+
+// Cache regatta results — NetworkFirst so fresh data loads online, cached data loads offline
+registerRoute(
+  ({ url }) => url.pathname.startsWith('/rr-proxy'),
+  new NetworkFirst({
+    cacheName: 'rr-results',
+    plugins: [new ExpirationPlugin({ maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 7 })],
+  })
+);
 
 // Cache Google Fonts stylesheets
 registerRoute(

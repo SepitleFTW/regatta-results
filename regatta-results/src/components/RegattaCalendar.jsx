@@ -60,9 +60,27 @@ export default function RegattaCalendar() {
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? '24px 16px' : '32px 24px' }}>
-      <h2 style={{ fontFamily: "'Playfair Display', serif", color: 'var(--t-text)', fontSize: isMobile ? '1.8rem' : '2.2rem', marginBottom: 8 }}>
-        Calendar
-      </h2>
+      <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', flexDirection: isMobile ? 'column' : 'row', gap: 12, marginBottom: 8 }}>
+        <h2 style={{ fontFamily: "'Playfair Display', serif", color: 'var(--t-text)', fontSize: isMobile ? '1.8rem' : '2.2rem', margin: 0 }}>
+          Calendar
+        </h2>
+        <a
+          href="/calendar.ics"
+          download
+          title="Add to calendar app"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: 'var(--t-bg-card)', border: '1px solid var(--t-border-s)',
+            borderRadius: 8, padding: '7px 14px', textDecoration: 'none',
+            color: 'var(--t-gold)', fontFamily: "'DM Mono', monospace", fontSize: 12,
+            fontWeight: 600, whiteSpace: 'nowrap', transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--t-gold)'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--t-border-s)'; }}
+        >
+          ⬇ Subscribe to Calendar
+        </a>
+      </div>
       <p style={{ color: 'var(--t-muted)', marginBottom: 24, fontFamily: "'DM Sans', sans-serif", fontSize: isMobile ? 14 : 16 }}>
         South African rowing regattas by season.
       </p>

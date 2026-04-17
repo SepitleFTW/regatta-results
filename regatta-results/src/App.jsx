@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { useIsMobile } from './hooks/useIsMobile';
@@ -36,6 +36,14 @@ export default function App() {
   const { dark, toggle } = useTheme();
 
   const isHome = location.pathname === '/';
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  useEffect(() => {
+    const on  = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener('online',  on);
+    window.addEventListener('offline', off);
+    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
+  }, []);
 
   function handleNavClick(path) {
     navigate(path);
@@ -55,6 +63,17 @@ export default function App() {
 
   return (
     <div style={{ background: 'var(--t-bg)', minHeight: '100vh' }}>
+      {!isOnline && (
+        <div style={{
+          position: 'fixed', top: 60, left: 0, right: 0, zIndex: 99,
+          background: '#92400e', color: '#fde68a',
+          fontFamily: "'DM Mono', monospace", fontSize: 12,
+          letterSpacing: '0.08em', textAlign: 'center',
+          padding: '7px 16px',
+        }}>
+          Offline — showing cached results
+        </div>
+      )}
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
         background: 'var(--t-bg-nav)', backdropFilter: 'blur(16px)',
