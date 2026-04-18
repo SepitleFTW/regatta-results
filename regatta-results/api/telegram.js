@@ -34,7 +34,7 @@ export default async function handler(req, res) {
       await redis(['SET', 'telegram_subs', JSON.stringify(subs)]);
     }
     await sendMessage(chatId,
-      '✅ *Subscribed!*\n\nYou\'ll get a message here whenever regatta results are posted on regattaresults.co.za.\n\nSend /unsubscribe to stop.'
+      '✅ *Subscribed!*\n\nYou\'ll get a message here whenever regatta results are posted on regatta-results-58xd.vercel.app.\n\nSend /unsubscribe to stop.'
     );
   } else if (text === '/unsubscribe' || text === '/stop') {
     const updated = subs.filter(id => id !== chatId);
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     await sendMessage(chatId, '❌ Unsubscribed. You won\'t receive any more notifications.');
   } else {
     await sendMessage(chatId,
-      '🚣 *Regatta Results SA*\n\n/subscribe — get notified when results are posted\n/unsubscribe — stop notifications\n\nOr visit regattaresults.co.za'
+      '🚣 *Regatta Results SA*\n\n/subscribe — get notified when results are posted\n/unsubscribe — stop notifications\n\nOr visit regatta-results-58xd.vercel.app'
     );
   }
 
