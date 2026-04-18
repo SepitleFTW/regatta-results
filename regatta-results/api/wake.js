@@ -48,7 +48,12 @@ function parseEvents(html, pageUrl) {
     const eventName = tds[1];
     if (!eventName || /break/i.test(eventName)) continue;
     const tdHtmls = [...trMatch[1].matchAll(/<td[^>]*>[\s\S]*?<\/td>/gi)];
-    const linkMatch = tdHtmls[7] ? tdHtmls[7][0].match(/href="([^"]+)"/i) : null;
+    // Scan all TDs for a link to a .htm result file (column position varies by regatta)
+    let linkMatch = null;
+    for (const td of tdHtmls) {
+      const m = td[0].match(/href="([^"]*\.htm)"/i);
+      if (m) { linkMatch = m; break; }
+    }
     events.push({
       eventId: tds[0],
       eventName,
@@ -104,7 +109,8 @@ export default async function handler(req, res) {
 
       if (item.eventId) {
         const ev = item.detailsUrl
-          ? events.find(e => normUrl(e.detailsUrl) === normUrl(item.detailsUrl))
+          ? (events.find(e => e.detailsUrl && normUrl(e.detailsUrl) === normUrl(item.detailsUrl))
+             ?? events.find(e => e.eventId === item.eventId))
           : events.find(e => e.eventId === item.eventId);
         if (ev?.status !== 'Official') continue;
 
