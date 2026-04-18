@@ -21,20 +21,21 @@ function urlBase64ToUint8Array(b64) {
 
 const VAPID_PUBLIC_KEY = 'BGbyZz4Z5VvUP6LlAsj8tzZ0by4VWh2jaOMx_kkXzbvx33Ofmu2OCQdp0gn45-KrN7oD-nsO1S9XxxkhaK9qU0A';
 
-export async function subscribeToPush() {
+export async function subscribeToPush(watched = []) {
   if (!('PushManager' in window) || !('serviceWorker' in navigator)) return;
   try {
     const reg = await navigator.serviceWorker.ready;
-    const existing = await reg.pushManager.getSubscription();
-    if (existing) return;
-    const subscription = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-    });
+    let subscription = await reg.pushManager.getSubscription();
+    if (!subscription) {
+      subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+    }
     await fetch('/api/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ subscription }),
+      body: JSON.stringify({ subscription, watched }),
     });
   } catch {}
 }

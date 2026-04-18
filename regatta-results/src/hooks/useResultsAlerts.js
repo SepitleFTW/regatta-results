@@ -8,6 +8,20 @@ const HISTORY_KEY = 'regatta_notif_history';
 
 function syncIdb(items) { putWatchedIdb(items); }
 
+async function syncServer(items) {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) return;
+    fetch('/api/update-watched', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endpoint: sub.endpoint, watched: items }),
+    }).catch(() => {});
+  } catch {}
+}
+
 export function getWatched() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
   catch { return []; }
@@ -19,6 +33,7 @@ export function addWatched(item) {
     const next = [...list, { notifiedEvents: [], notified: false, ...item }];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     syncIdb(next);
+    syncServer(next);
   }
 }
 
@@ -26,6 +41,7 @@ export function removeWatched(id) {
   const next = getWatched().filter(r => r.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   syncIdb(next);
+  syncServer(next);
 }
 
 export function isWatched(id) {

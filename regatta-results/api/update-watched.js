@@ -9,17 +9,15 @@ async function redis(cmd) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
-  const { subscription, watched = [] } = req.body || {};
-  if (!subscription?.endpoint) return res.status(400).json({ error: 'missing subscription' });
+  const { endpoint, watched } = req.body || {};
+  if (!endpoint || !Array.isArray(watched)) return res.status(400).json({ error: 'missing endpoint or watched' });
 
   const { result: raw } = await redis(['GET', 'push_subs']);
   const subs = raw ? JSON.parse(raw) : [];
-  const idx = subs.findIndex(s => s.subscription?.endpoint === subscription.endpoint);
+  const idx = subs.findIndex(s => s.subscription?.endpoint === endpoint);
   if (idx >= 0) {
-    subs[idx] = { ...subs[idx], subscription, ...(watched.length ? { watched } : {}) };
-  } else {
-    subs.push({ subscription, watched });
+    subs[idx] = { ...subs[idx], watched };
+    await redis(['SET', 'push_subs', JSON.stringify(subs)]);
   }
-  await redis(['SET', 'push_subs', JSON.stringify(subs)]);
   return res.status(200).json({ ok: true });
 }

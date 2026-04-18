@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { addWatched, removeWatched, isWatched } from '../hooks/useResultsAlerts';
+import { addWatched, removeWatched, isWatched, getWatched } from '../hooks/useResultsAlerts';
 import { isIos, isPwa, requestPermission, subscribeToPush } from '../utils/notifications';
 
 const TIPS = {
@@ -37,7 +37,7 @@ export default function BellButton({ watchId, watchItem, size = 'md', label, var
       setTip('denied');
       setTimeout(() => setTip(null), 8000);
     } else {
-      subscribeToPush();
+      subscribeToPush(getWatched());
     }
   }
 
