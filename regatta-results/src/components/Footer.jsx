@@ -10,7 +10,21 @@ export default function Footer() {
       <p style={{ color: 'var(--t-dim)', fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}>
         © {new Date().getFullYear()} Regatta Results South Africa · Built with love for the SA rowing community
       </p>
-      <p style={{ color: 'var(--t-vdim)', fontSize: 12, marginTop: 8, fontFamily: "'DM Mono', monospace" }}>
+
+      <div style={{ margin: '20px auto 0', display: 'flex', justifyContent: 'center', gap: 24, flexWrap: 'wrap' }}>
+        <a href="tel:+27670743920" style={{ color: 'var(--t-muted)', fontFamily: "'DM Mono', monospace", fontSize: 12, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--t-gold)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--t-muted)'}>
+          📞 +27 67 074 3920
+        </a>
+        <a href="mailto:sepitleleshilo642@gmail.com" style={{ color: 'var(--t-muted)', fontFamily: "'DM Mono', monospace", fontSize: 12, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--t-gold)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--t-muted)'}>
+          ✉ sepitleleshilo642@gmail.com
+        </a>
+      </div>
+
+      <p style={{ color: 'var(--t-vdim)', fontSize: 12, marginTop: 16, fontFamily: "'DM Mono', monospace" }}>
         Data sourced from{" "}
         <a href="https://regattaresults.co.za" target="_blank" rel="noopener noreferrer"
           style={{ color: 'var(--t-dim)', textDecoration: 'underline' }}>regattaresults.co.za</a>
