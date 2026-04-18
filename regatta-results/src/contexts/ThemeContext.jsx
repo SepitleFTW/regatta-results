@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 const DARK = {
   '--t-bg': '#0a1a0a',
@@ -56,16 +56,19 @@ const LIGHT = {
   '--t-red-b': 'rgba(220,38,38,0.25)',
 };
 
-function applyVars(isDark) {
-  const vars = isDark ? DARK : LIGHT;
+function applyVars(isDark, animate = false) {
   const root = document.documentElement;
+  if (animate) root.classList.add('theme-fade');
+  const vars = isDark ? DARK : LIGHT;
   for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
   document.body.style.background = isDark ? '#0a1a0a' : '#f5f2ea';
+  if (animate) setTimeout(() => root.classList.remove('theme-fade'), 450);
 }
 
 const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
+  const mounted = useRef(false);
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem('regatta_theme');
     const isDark = saved !== null ? saved === 'dark' : true;
@@ -73,7 +76,10 @@ export function ThemeProvider({ children }) {
     return isDark;
   });
 
-  useEffect(() => { applyVars(dark); }, [dark]);
+  useEffect(() => {
+    if (!mounted.current) { mounted.current = true; return; }
+    applyVars(dark, true);
+  }, [dark]);
 
   function toggle() {
     setDark(d => {

@@ -1,0 +1,11 @@
+.theme-fade *,
+.theme-fade *::before,
+.theme-fade *::after {
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease,
+    border-color 0.4s ease,
+    fill 0.4s ease,
+    box-shadow 0.4s ease,
+    opacity 0.4s ease !important;
+}
