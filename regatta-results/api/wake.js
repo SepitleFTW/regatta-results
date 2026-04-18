@@ -106,7 +106,7 @@ export default async function handler(req, res) {
         const notifPath = item.detailsUrl
           ? `/results/${item.raceId || item.id}?event=${encodeURIComponent(item.detailsUrl)}`
           : `/results/${item.raceId || item.id}`;
-        const fullUrl = `https://regattaresults.co.za${notifPath}`;
+        const fullUrl = `${process.env.SITE_URL}${notifPath}`;
         telegramNotifs.set(fullUrl, { title: `Results: ${item.name}`, body: 'Results have been posted.', url: fullUrl });
         try {
           await webpush.sendNotification(sub.subscription, JSON.stringify({
@@ -136,7 +136,7 @@ export default async function handler(req, res) {
         const notifPath = eventDetailUrl
           ? `/results/${item.id}?event=${encodeURIComponent(eventDetailUrl)}`
           : `/results/${item.id}`;
-        const fullUrl = `https://regattaresults.co.za${notifPath}`;
+        const fullUrl = `${process.env.SITE_URL}${notifPath}`;
         telegramNotifs.set(fullUrl, { title: `Results: ${label}`, body: item.name, url: fullUrl });
         try {
           await webpush.sendNotification(sub.subscription, JSON.stringify({
