@@ -15,12 +15,19 @@ async function redis(cmd) {
   return r.json();
 }
 
-// Strip host/proxy prefix so client proxy URLs and server absolute URLs compare equal
+// Strip host/proxy prefix and decode percent-encoding so URLs compare equal
+// e.g. "49_Heat%201.htm" (from HTML href) matches "49_Heat 1.htm" (stored by client)
 function normUrl(url) {
   if (!url) return null;
-  return url
-    .replace(/^https?:\/\/(www\.)?regattaresults\.co\.za/, '')
-    .replace(/^\/rr-proxy/, '');
+  try {
+    return decodeURIComponent(url)
+      .replace(/^https?:\/\/(www\.)?regattaresults\.co\.za/, '')
+      .replace(/^\/rr-proxy/, '');
+  } catch {
+    return url
+      .replace(/^https?:\/\/(www\.)?regattaresults\.co\.za/, '')
+      .replace(/^\/rr-proxy/, '');
+  }
 }
 
 // Convert any URL (proxy or absolute) to an absolute https URL for server-side fetching
