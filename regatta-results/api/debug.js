@@ -77,6 +77,7 @@ export default async function handler(req, res) {
     upstash: { connected: upstashOk },
     pushSubscriptions: subs.map(s => ({
       endpoint: s.subscription?.endpoint?.substring(0, 50) + '...',
+      telegramLinked: !!s.telegramChatId,
       watchedCount: (s.watched || []).length,
       unwatchedCount: (s.watched || []).filter(w => !w.notified).length,
       unnotified: (s.watched || []).filter(w => !w.notified).map(w => ({ id: w.id, name: w.name, url: w.url, detailsUrl: w.detailsUrl, eventId: w.eventId })),
