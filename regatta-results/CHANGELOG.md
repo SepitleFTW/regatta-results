@@ -7,7 +7,7 @@ All notable changes to Regatta Results SA.
 ## [2026-04-18] — Telegram Notifications, QStash Cron & Theme Fade
 
 ### Added
-- **Telegram bot notifications** — subscribe via `/start` in the bot to receive a message whenever results go Official, even when the app is closed. Works independently of push notifications.
+- **Telegram bot notifications** — link your Telegram to your push subscription via the **Link Telegram** button in the footer. You'll only receive messages for events you personally belled, not everyone else's. Uses a one-time 10-minute token via `/link <CODE>`.
 - **QStash cron** — replaced unreliable GitHub Actions schedule (ran every ~60–90 min in practice) with Upstash QStash, which fires reliably every 5 minutes.
 - **Smooth theme transition** — dark/light mode toggle now fades all colours over 0.4 s instead of snapping instantly.
 - **iCal export** — "Subscribe to Calendar" button on the calendar page downloads a `.ics` file compatible with Google Calendar, Apple Calendar and Outlook.
