@@ -4,6 +4,24 @@ All notable changes to Regatta Results SA.
 
 ---
 
+## [2026-04-18] — Telegram Notifications, QStash Cron & Theme Fade
+
+### Added
+- **Telegram bot notifications** — subscribe via `/start` in the bot to receive a message whenever results go Official, even when the app is closed. Works independently of push notifications.
+- **QStash cron** — replaced unreliable GitHub Actions schedule (ran every ~60–90 min in practice) with Upstash QStash, which fires reliably every 5 minutes.
+- **Smooth theme transition** — dark/light mode toggle now fades all colours over 0.4 s instead of snapping instantly.
+- **iCal export** — "Subscribe to Calendar" button on the calendar page downloads a `.ics` file compatible with Google Calendar, Apple Calendar and Outlook.
+- **Offline mode** — results pages load from cache when offline; an amber banner appears when the connection is lost.
+- **Contact details in footer** — phone and email links at the bottom of every page.
+
+### Fixed
+- **Telegram notifications decoupled from push state** — previously Telegram only fired when a push item changed status in the same cron run. Now uses a separate `telegram_notified` Redis key so Telegram always fires even if push was already sent in a prior run.
+- **URL comparison bug in wake.js** — `parseEvents` was being called with the proxy URL (`/rr-proxy/...`) instead of the absolute URL, causing `baseDir` to be wrong and `detailsUrl` matching to fail for newly-Official events.
+- **SnapScan donation** — replaced PayFast (required NPO documentation) with a simple SnapScan QR code.
+- **Debug endpoint** — now shows `unwatchedCount` and unnotified item list per subscription for easier diagnostics.
+
+---
+
 ## [2026-04-17] — Dark/Light Mode, Notification Inbox & SnapScan
 
 ### Added
