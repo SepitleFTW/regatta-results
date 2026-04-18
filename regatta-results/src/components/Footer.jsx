@@ -1,4 +1,5 @@
 import OarIcon from './OarIcon';
+import TelegramLink from './TelegramLink';
 
 export default function Footer() {
   return (
@@ -23,6 +24,8 @@ export default function Footer() {
           ✉ sepitleleshilo642@gmail.com
         </a>
       </div>
+
+      <TelegramLink />
 
       <p style={{ color: 'var(--t-vdim)', fontSize: 12, marginTop: 16, fontFamily: "'DM Mono', monospace" }}>
         Data sourced from{" "}

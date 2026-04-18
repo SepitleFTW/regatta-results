@@ -22,27 +22,48 @@ export default async function handler(req, res) {
   if (!message) return res.status(200).end();
 
   const chatId = message.chat?.id;
-  const text = (message.text || '').trim().toLowerCase();
+  const text = (message.text || '').trim();
+  const textLower = text.toLowerCase();
   if (!chatId) return res.status(200).end();
 
-  const { result: raw } = await redis(['GET', 'telegram_subs']);
-  const subs = raw ? JSON.parse(raw) : [];
-
-  if (text === '/start' || text === '/subscribe') {
-    if (!subs.includes(chatId)) {
-      subs.push(chatId);
-      await redis(['SET', 'telegram_subs', JSON.stringify(subs)]);
+  if (textLower.startsWith('/link ')) {
+    const token = text.slice(6).trim().toUpperCase();
+    const { result: endpoint } = await redis(['GET', `tglink:${token}`]);
+    if (!endpoint) {
+      await sendMessage(chatId, '❌ Invalid or expired code. Generate a new one from the app and try again.');
+      return res.status(200).end();
     }
+
+    // Find the push subscription matching this endpoint and attach chatId
+    const { result: raw } = await redis(['GET', 'push_subs']);
+    const subs = raw ? JSON.parse(raw) : [];
+    const idx = subs.findIndex(s => s.subscription?.endpoint === endpoint);
+    if (idx === -1) {
+      await sendMessage(chatId, '❌ Push subscription not found. Make sure notifications are enabled in the app first.');
+      return res.status(200).end();
+    }
+
+    subs[idx] = { ...subs[idx], telegramChatId: chatId };
+    await redis(['SET', 'push_subs', JSON.stringify(subs)]);
+    await redis(['DEL', `tglink:${token}`]);
+
     await sendMessage(chatId,
-      '✅ *Subscribed!*\n\nYou\'ll get a message here whenever regatta results are posted on regatta-results-58xd.vercel.app.\n\nSend /unsubscribe to stop.'
+      '✅ *Linked!*\n\nYou\'ll now receive Telegram notifications only for the events you\'re watching in the app.\n\nSend /unlink to disconnect.'
     );
-  } else if (text === '/unsubscribe' || text === '/stop') {
-    const updated = subs.filter(id => id !== chatId);
-    await redis(['SET', 'telegram_subs', JSON.stringify(updated)]);
-    await sendMessage(chatId, '❌ Unsubscribed. You won\'t receive any more notifications.');
+  } else if (textLower === '/unlink' || textLower === '/unsubscribe' || textLower === '/stop') {
+    // Remove chatId from any push subscription that has it
+    const { result: raw } = await redis(['GET', 'push_subs']);
+    const subs = raw ? JSON.parse(raw) : [];
+    const updated = subs.map(s => s.telegramChatId === chatId ? { ...s, telegramChatId: null } : s);
+    await redis(['SET', 'push_subs', JSON.stringify(updated)]);
+    await sendMessage(chatId, '❌ Unlinked. You won\'t receive any more Telegram notifications.');
+  } else if (textLower === '/start' || textLower === '/subscribe') {
+    await sendMessage(chatId,
+      '🚣 *Regatta Results SA*\n\nTo get notified for *your* watched events:\n\n1. Open the app at regatta-results-58xd.vercel.app\n2. Tap *Link Telegram* in the footer\n3. Send the code you receive here using /link\n\nExample: `/link ABC123`'
+    );
   } else {
     await sendMessage(chatId,
-      '🚣 *Regatta Results SA*\n\n/subscribe — get notified when results are posted\n/unsubscribe — stop notifications\n\nOr visit regatta-results-58xd.vercel.app'
+      '🚣 *Regatta Results SA*\n\n/link — connect to your watched events in the app\n/unlink — disconnect\n\nOr visit regatta-results-58xd.vercel.app'
     );
   }
 

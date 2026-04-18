@@ -154,71 +154,71 @@ export default async function handler(req, res) {
   const remaining = updatedSubs.filter(s => !expired.includes(s.subscription?.endpoint));
   await redis(['SET', 'push_subs', JSON.stringify(remaining)]);
 
-  // === Independent Telegram tracking — decoupled from per-user push state ===
-  // telegram_notified tracks event keys already sent to Telegram, so it fires
-  // even if the push notification was already sent in a previous cron run.
+  // === Per-subscriber Telegram notifications ===
+  // Only subscribers who linked via /link get notified, and only for their own watched events.
+  // Tracked per (event + chatId) so missed notifications are retried on the next cron run.
   const { result: tNotifRaw } = await redis(['GET', 'telegram_notified']);
   const telegramNotified = new Set(tNotifRaw ? JSON.parse(tNotifRaw) : []);
-  const newTelegramMsgs = [];
-  const seenTgKeys = new Set();
+  let telegramSent = 0;
 
-  for (const sub of updatedSubs) {
-    for (const item of (sub.watched || [])) {
-      if (item.eventId) {
-        // Only care about items confirmed Official (notified: true)
-        if (!item.notified) continue;
-        const key = item.detailsUrl ? normUrl(item.detailsUrl) : (normUrl(item.url) + ':' + item.eventId);
-        if (!key || seenTgKeys.has(key) || telegramNotified.has(key)) continue;
-        seenTgKeys.add(key);
-        telegramNotified.add(key);
-        const notifPath = item.detailsUrl
-          ? `/results/${item.raceId || item.id}?event=${encodeURIComponent(item.detailsUrl)}`
-          : `/results/${item.raceId || item.id}`;
-        newTelegramMsgs.push({ title: `Results: ${item.name}`, url: `${process.env.SITE_URL}${notifPath}` });
-      } else {
-        // Whole-regatta watcher — each notifiedEvent is tracked separately
-        for (const evId of (item.notifiedEvents || [])) {
-          const key = normUrl(item.url) + ':' + evId;
-          if (seenTgKeys.has(key) || telegramNotified.has(key)) continue;
-          seenTgKeys.add(key);
+  if (process.env.TELEGRAM_BOT_TOKEN) {
+    for (const sub of updatedSubs) {
+      if (!sub.telegramChatId) continue;
+      const chatId = sub.telegramChatId;
+
+      for (const item of (sub.watched || [])) {
+        if (item.eventId) {
+          if (!item.notified) continue;
+          const key = (item.detailsUrl ? normUrl(item.detailsUrl) : normUrl(item.url) + ':' + item.eventId) + ':' + chatId;
+          if (!key || telegramNotified.has(key)) continue;
           telegramNotified.add(key);
-          const html = htmlCache.get(toAbsolute(item.url));
-          const events = html ? parseEvents(html, toAbsolute(item.url)) : [];
-          const ev = events.find(e => e.eventId === evId);
-          const notifPath = ev?.detailsUrl
-            ? `/results/${item.id}?event=${encodeURIComponent(ev.detailsUrl)}`
-            : `/results/${item.id}`;
-          newTelegramMsgs.push({
-            title: `Results: ${ev?.eventName || item.name}`,
-            url: `${process.env.SITE_URL}${notifPath}`,
-          });
-        }
-      }
-    }
-  }
 
-  if (newTelegramMsgs.length) {
-    await redis(['SET', 'telegram_notified', JSON.stringify([...telegramNotified])]);
-
-    if (process.env.TELEGRAM_BOT_TOKEN) {
-      const { result: tRaw } = await redis(['GET', 'telegram_subs']);
-      const telegramSubs = tRaw ? JSON.parse(tRaw) : [];
-      for (const chatId of telegramSubs) {
-        for (const notif of newTelegramMsgs) {
+          const notifPath = item.detailsUrl
+            ? `/results/${item.raceId || item.id}?event=${encodeURIComponent(item.detailsUrl)}`
+            : `/results/${item.raceId || item.id}`;
           await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               chat_id: chatId,
-              text: `🚣 *${notif.title}*\n\n[View Results](${notif.url})`,
+              text: `🚣 *Results: ${item.name}*\n\n[View Results](${process.env.SITE_URL}${notifPath})`,
               parse_mode: 'Markdown',
               disable_web_page_preview: false,
             }),
           }).catch(() => {});
+          telegramSent++;
+        } else {
+          for (const evId of (item.notifiedEvents || [])) {
+            const key = normUrl(item.url) + ':' + evId + ':' + chatId;
+            if (telegramNotified.has(key)) continue;
+            telegramNotified.add(key);
+
+            const html = htmlCache.get(toAbsolute(item.url));
+            const events = html ? parseEvents(html, toAbsolute(item.url)) : [];
+            const ev = events.find(e => e.eventId === evId);
+            const notifPath = ev?.detailsUrl
+              ? `/results/${item.id}?event=${encodeURIComponent(ev.detailsUrl)}`
+              : `/results/${item.id}`;
+            await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: chatId,
+                text: `🚣 *Results: ${ev?.eventName || item.name}*\n\n[View Results](${process.env.SITE_URL}${notifPath})`,
+                parse_mode: 'Markdown',
+                disable_web_page_preview: false,
+              }),
+            }).catch(() => {});
+            telegramSent++;
+          }
         }
       }
     }
   }
 
-  return res.status(200).json({ sent, removed: expired.length, checked: htmlCache.size, telegram: newTelegramMsgs.length });
+  if (telegramSent > 0) {
+    await redis(['SET', 'telegram_notified', JSON.stringify([...telegramNotified])]);
+  }
+
+  return res.status(200).json({ sent, removed: expired.length, checked: htmlCache.size, telegram: telegramSent });
 }
