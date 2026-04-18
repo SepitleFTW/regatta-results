@@ -79,6 +79,7 @@ export default async function handler(req, res) {
   const updatedSubs = subs.map(sub => ({ ...sub }));
   let sent = 0;
   const expired = [];
+  const telegramNotifs = new Map(); // url → { title, body, url } — deduplicated
 
   for (let i = 0; i < updatedSubs.length; i++) {
     const sub = updatedSubs[i];
@@ -105,11 +106,13 @@ export default async function handler(req, res) {
         const notifPath = item.detailsUrl
           ? `/results/${item.raceId || item.id}?event=${encodeURIComponent(item.detailsUrl)}`
           : `/results/${item.raceId || item.id}`;
+        const fullUrl = `https://regattaresults.co.za${notifPath}`;
+        telegramNotifs.set(fullUrl, { title: `Results: ${item.name}`, body: 'Results have been posted.', url: fullUrl });
         try {
           await webpush.sendNotification(sub.subscription, JSON.stringify({
             title: `Results: ${item.name}`,
             body: 'Results have been posted.',
-            url: `https://regattaresults.co.za${notifPath}`,
+            url: fullUrl,
           }));
           sent++;
         } catch (e) {
@@ -133,11 +136,13 @@ export default async function handler(req, res) {
         const notifPath = eventDetailUrl
           ? `/results/${item.id}?event=${encodeURIComponent(eventDetailUrl)}`
           : `/results/${item.id}`;
+        const fullUrl = `https://regattaresults.co.za${notifPath}`;
+        telegramNotifs.set(fullUrl, { title: `Results: ${label}`, body: item.name, url: fullUrl });
         try {
           await webpush.sendNotification(sub.subscription, JSON.stringify({
             title: `Results: ${label}`,
             body: item.name,
-            url: `https://regattaresults.co.za${notifPath}`,
+            url: fullUrl,
           }));
           sent++;
         } catch (e) {
@@ -152,5 +157,25 @@ export default async function handler(req, res) {
   const remaining = updatedSubs.filter(s => !expired.includes(s.subscription.endpoint));
   await redis(['SET', 'push_subs', JSON.stringify(remaining)]);
 
-  return res.status(200).json({ sent, removed: expired.length, checked: htmlCache.size });
+  // Broadcast to Telegram subscribers
+  if (telegramNotifs.size && process.env.TELEGRAM_BOT_TOKEN) {
+    const { result: tRaw } = await redis(['GET', 'telegram_subs']);
+    const telegramSubs = tRaw ? JSON.parse(tRaw) : [];
+    for (const chatId of telegramSubs) {
+      for (const notif of telegramNotifs.values()) {
+        await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: `🚣 *${notif.title}*${notif.body ? '\n' + notif.body : ''}\n\n[View Results](${notif.url})`,
+            parse_mode: 'Markdown',
+            disable_web_page_preview: false,
+          }),
+        }).catch(() => {});
+      }
+    }
+  }
+
+  return res.status(200).json({ sent, removed: expired.length, checked: htmlCache.size, telegram: telegramNotifs.size });
 }
