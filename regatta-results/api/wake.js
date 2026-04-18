@@ -15,6 +15,21 @@ async function redis(cmd) {
   return r.json();
 }
 
+// Strip host/proxy prefix so client proxy URLs and server absolute URLs compare equal
+function normUrl(url) {
+  if (!url) return null;
+  return url
+    .replace(/^https?:\/\/(www\.)?regattaresults\.co\.za/, '')
+    .replace(/^\/rr-proxy/, '');
+}
+
+// Convert any URL (proxy or absolute) to an absolute https URL for server-side fetching
+function toAbsolute(url) {
+  if (!url) return null;
+  if (url.startsWith('http')) return url;
+  return `https://regattaresults.co.za${url.replace(/^\/rr-proxy/, '')}`;
+}
+
 // Server-side HTML parser — no DOMParser, pure regex
 function parseEvents(html, pageUrl) {
   const baseDir = pageUrl.substring(0, pageUrl.lastIndexOf('/') + 1);
@@ -48,8 +63,9 @@ export default async function handler(req, res) {
   const htmlCache = new Map();
   for (const sub of subs) {
     for (const item of (sub.watched || [])) {
-      if (!item.notified && item.url && !htmlCache.has(item.url)) {
-        htmlCache.set(item.url, null);
+      const absUrl = toAbsolute(item.url);
+      if (!item.notified && absUrl && !htmlCache.has(absUrl)) {
+        htmlCache.set(absUrl, null);
       }
     }
   }
@@ -72,14 +88,14 @@ export default async function handler(req, res) {
     for (let j = 0; j < watched.length; j++) {
       const item = watched[j];
       if (item.notified) continue;
-      const html = htmlCache.get(item.url);
+      const html = htmlCache.get(toAbsolute(item.url));
       if (!html) continue;
 
       const events = parseEvents(html, item.url);
 
       if (item.eventId) {
         const ev = item.detailsUrl
-          ? events.find(e => e.detailsUrl === item.detailsUrl)
+          ? events.find(e => normUrl(e.detailsUrl) === normUrl(item.detailsUrl))
           : events.find(e => e.eventId === item.eventId);
         if (ev?.status !== 'Official') continue;
 
