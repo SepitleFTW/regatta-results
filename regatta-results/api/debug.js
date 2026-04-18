@@ -47,7 +47,7 @@ export default async function handler(req, res) {
       endpoint: s.subscription?.endpoint?.substring(0, 50) + '...',
       watchedCount: (s.watched || []).length,
       unwatchedCount: (s.watched || []).filter(w => !w.notified).length,
-      unnotified: (s.watched || []).filter(w => !w.notified).map(w => ({ id: w.id, name: w.name })),
+      unnotified: (s.watched || []).filter(w => !w.notified).map(w => ({ id: w.id, name: w.name, url: w.url, detailsUrl: w.detailsUrl, eventId: w.eventId })),
     })),
     telegramSubscribers: telegramSubs.length,
     directFetch: { ok: fetchOk, status: fetchStatus },
