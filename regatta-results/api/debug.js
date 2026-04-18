@@ -35,13 +35,19 @@ export default async function handler(req, res) {
     fetchStatus = e.message;
   }
 
+  let telegramSubs = [];
+  try {
+    const d = await redis(['GET', 'telegram_subs']);
+    telegramSubs = d.result ? JSON.parse(d.result) : [];
+  } catch {}
+
   res.status(200).json({
     upstash: { connected: upstashOk },
-    subscriptions: subs.map(s => ({
+    pushSubscriptions: subs.map(s => ({
       endpoint: s.subscription?.endpoint?.substring(0, 50) + '...',
       watchedCount: (s.watched || []).length,
-      watched: (s.watched || []).map(w => ({ id: w.id, name: w.name, notified: w.notified })),
     })),
+    telegramSubscribers: telegramSubs.length,
     directFetch: { ok: fetchOk, status: fetchStatus },
   });
 }
