@@ -39,7 +39,7 @@ export function parseEventResults(html) {
         time: cells[4]?.textContent.trim(),
         delta: cells[6]?.textContent.trim() || '',
         status: cells[7]?.textContent.trim() || 'Finished',
-        athlete: cells[8]?.textContent.trim() || '',
+        athlete: cells[8]?.textContent.trim() || cells[2]?.textContent.trim() || '',
       };
     })
     .filter(r => r.place && r.org);
