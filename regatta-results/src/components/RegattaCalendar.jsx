@@ -88,7 +88,7 @@ export default function RegattaCalendar() {
       {/* Year tabs */}
       <div style={{ overflowX: 'auto', marginBottom: 28, borderBottom: '1px solid var(--t-border-s)', paddingBottom: 16, WebkitOverflowScrolling: 'touch' }}>
         <div style={{ display: 'flex', gap: 6, width: 'max-content' }}>
-          {[2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014].map(y => (
+          {[2026, 2025, 2024].map(y => (
             <button key={y} onClick={() => setYear(y)} style={{
               background: year === y ? 'var(--t-gold)' : 'transparent',
               color: year === y ? 'var(--t-bg-deep)' : 'var(--t-muted)',
