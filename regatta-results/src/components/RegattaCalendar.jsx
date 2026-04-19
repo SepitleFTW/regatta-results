@@ -64,30 +64,22 @@ export default function RegattaCalendar() {
         <h2 style={{ fontFamily: "'Playfair Display', serif", color: 'var(--t-text)', fontSize: isMobile ? '1.8rem' : '2.2rem', margin: 0 }}>
           Calendar
         </h2>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
-          {[
-            { label: '⬇ Subscribe to Calendar', href: '/calendar.ics', download: true },
-            { label: '📋 Draws', href: 'https://regatta.co.za/gui/Reports.aspx?reporttype=1', download: false },
-            { label: '📝 Entries', href: 'https://regatta.co.za/gui/Reports.aspx?reporttype=5', download: false },
-          ].map(({ label, href, download }) => (
-            <a
-              key={label}
-              href={href}
-              {...(download ? { download: true } : { target: '_blank', rel: 'noopener noreferrer' })}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                background: 'var(--t-bg-card)', border: '1px solid var(--t-border-s)',
-                borderRadius: 8, padding: '7px 14px', textDecoration: 'none',
-                color: 'var(--t-gold)', fontFamily: "'DM Mono', monospace", fontSize: 12,
-                fontWeight: 600, whiteSpace: 'nowrap', transition: 'all 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--t-gold)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--t-border-s)'; }}
-            >
-              {label}
-            </a>
-          ))}
-        </div>
+        <a
+          href="/calendar.ics"
+          download
+          title="Add to calendar app"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: 'var(--t-bg-card)', border: '1px solid var(--t-border-s)',
+            borderRadius: 8, padding: '7px 14px', textDecoration: 'none',
+            color: 'var(--t-gold)', fontFamily: "'DM Mono', monospace", fontSize: 12,
+            fontWeight: 600, whiteSpace: 'nowrap', transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--t-gold)'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--t-border-s)'; }}
+        >
+          ⬇ Subscribe to Calendar
+        </a>
       </div>
       <p style={{ color: 'var(--t-muted)', marginBottom: 24, fontFamily: "'DM Sans', sans-serif", fontSize: isMobile ? 14 : 16 }}>
         South African rowing regattas by season.
