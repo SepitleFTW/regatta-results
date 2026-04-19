@@ -105,7 +105,7 @@ export const REGATTAS = {
     { id: "gauteng-schools-2023", name: "Gauteng Schools Champs", date: "2023", location: "Roodeplaat Dam", province: "Gauteng", status: "Official", url: `${BASE}/Results2023/2023-gautengschools/results.htm` },
   ],
   2022: [
-    { id: "vlc-jan-2022", name: "VLC Regatta", date: "Jan 2022", location: "Germiston Lake", province: "Gauteng", status: "Official", url: `${BASE}/Results2022/2022-vlc-jan/results.htm` },
+    { id: "vlc-jan-2022", name: "VLC Regatta", date: "Jan 2022", location: "Germiston Lake", province: "Gauteng", status: "Official", url: `https://www.regattaresults.co.za/backup%20reg6/results.htm` },
     { id: "wc-champs-jan-2022", name: "WC Champs", date: "Jan 2022", location: "Western Cape", province: "Western Cape", status: "Official", url: `${BASE}/Results2022/2022-wcchamps-jan/results.htm` },
     { id: "nick-whaits-jan-2022", name: "Nick Whaits Regatta", date: "Jan 2022", location: "Western Cape", province: "Western Cape", status: "Official", url: `${BASE}/Results2022/2022-whaits-jan/results.htm` },
     { id: "buffalo-feb-2022", name: "Buffalo Regatta", date: "Feb 2022", location: "Buffalo City", province: "Eastern Cape", status: "Official", url: `${BASE}/Results2022/2022-buffalo-feb/results.htm` },
